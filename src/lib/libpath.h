@@ -32,14 +32,6 @@ typedef struct {
   openflow_actions *extra_actions;
 } hop;
 
-/*
-typedef struct {
-  hop public;
-  void *r_hop_pointer;
-  void *r_extra_actions_pointer;
-} hop_private;
-*/
-
 typedef struct {
   struct ofp_match match;
   uint16_t priority;

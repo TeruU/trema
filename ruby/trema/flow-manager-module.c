@@ -21,93 +21,44 @@
 #include "ruby.h"
 #include "libpath.h"
 #include "flow-manager-path.h"
+#include "flow-manager-hop.h"
 #include "match.h"
+#include "utils.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
 #define debug(...) 1 ? (void) 0 : printf
 #endif
 
+typedef struct {
+  path public;
+  uint64_t id;
+  uint64_t in_datapath_id;
+  setup_handler setup_callback;
+  void *setup_user_data;
+  teardown_handler teardown_callback;
+  void *teardown_user_data;
+} path_private;
+
+typedef struct {
+  hop public;
+  void *r_hop_pointer;
+  void *r_extra_actions_pointer;
+} hop_private;
+
 VALUE mFlowManager;
-
-static const char *
-status_to_string( int status ) {
-  switch ( status ) {
-    case SETUP_SUCCEEDED:
-      return "succeeded";
-    break;
-    case SETUP_CONFLICTED_ENTRY:
-      return "conflicted entry";
-    break;
-    case SETUP_SWITCH_ERROR:
-      return "switch error";
-    break;
-    default:
-    break;
-  }
-
-  return "undefined";
-}
-
-static const char *
-reason_to_string( int reason ) {
-  switch ( reason ) {
-    case TEARDOWN_TIMEOUT:
-      return "timeout";
-    break;
-    case TEARDOWN_MANUALLY_REQUESTED:
-      return "manually requested";
-    break;
-    default:
-    break;
-  }
-
-  return "undefined";
-}
-
-static void
-dump_hop( const hop *h ) {
-  info( "Hop: datapath_id = %#" PRIx64 ", in_port = %u, out_port = %u, extra_actions = %p.",
-        h->datapath_id, h->in_port, h->out_port, h->extra_actions );
-}
-
-static void
-dump_path( const path *p ) {
-  char match_string[ 256 ];
-  match_to_string( &p->match, match_string, sizeof( match_string ) );
-
-  info( "Path: match = [%s], priority = %u, idle_timeout = %u, hard_timeout = %u, n_hops = %d, hops = %p.",
-        match_string, p->priority, p->idle_timeout, p->hard_timeout, p->n_hops, p->hops );
-  if ( p->n_hops > 0 && p->hops != NULL ) {
-    list_element *e = p->hops;
-    while ( e != NULL ) {
-      dump_hop( e->data );
-      e = e->next;
-    }
-  }
-}
 
 static void
 handle_setup( int status, const path *p, void *controller ) {
   info( "**** Path setup completed ( status = %s)*** ", status_to_string( status ));
+
+  VALUE obj = Data_Wrap_Struct(cPath, 0, 0, p);
+  debug("path pointer : %p\n", p);
   dump_path( p );
+  info( "***end dump_path");
 
-	VALUE nullMatch = rb_funcall(cMatch, rb_intern("new"), 0);
-	VALUE obj = rb_funcall( cPath, rb_intern( "new" ), 1, nullMatch );
-
-	path *_path;
-	Data_Get_Struct( obj, path, _path );
-
-	_path->hard_timeout = p->hard_timeout;
-	_path->hops = p->hops;
-	_path->idle_timeout = p->idle_timeout;
-	_path->match = p->match;
-	_path->n_hops = p->n_hops;
-	_path->priority = p->priority;
-
-  printf("controller : %p\n", controller);
   if ( rb_respond_to( ( VALUE ) controller, rb_intern( "flow_manager_setup_reply" ) ) == Qtrue ) {
     rb_funcall( ( VALUE ) controller, rb_intern( "flow_manager_setup_reply" ), 2, rb_str_new2(status_to_string( status )), obj);
   }
@@ -115,22 +66,12 @@ handle_setup( int status, const path *p, void *controller ) {
 
 static void
 handle_teardown( int reason, const path *p, void *controller ) {
-  info("Path teardown completed");
-  info( "***( reason = %s)*** ", reason_to_string( reason ));
+  info( "***Path teardown completed ( reason = %s)*** ", reason_to_string( reason ));
+
+  VALUE obj = Data_Wrap_Struct(cPath, 0, 0, p);
+  debug("path pointer : %p\n", p);
   dump_path( p );
-
-	VALUE nullMatch = rb_funcall(cMatch, rb_intern("new"), 0);
-	VALUE obj = rb_funcall( cPath, rb_intern( "new" ), 1, nullMatch );
-
-	path *_path;
-	Data_Get_Struct( obj, path, _path );
-
-	_path->hard_timeout = p->hard_timeout;
-	_path->hops = p->hops;
-	_path->idle_timeout = p->idle_timeout;
-	_path->match = p->match;
-	_path->n_hops = p->n_hops;
-	_path->priority = p->priority;
+  info( "***end dump_path");
 
   if ( rb_respond_to( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ) ) == Qtrue ) {
     rb_funcall( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ), 2, rb_str_new2(reason_to_string( reason )), obj);
@@ -138,9 +79,28 @@ handle_teardown( int reason, const path *p, void *controller ) {
   //stop_trema();
 }
 
+static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
+{
+        debug("start\n");
+        struct ofp_match *m;
+        Data_Get_Struct(r_match, struct ofp_match, m);
+
+        bool ret = teardown_path_by_match(*m);
+        debug("end with %d\n", ret);
+
+        if(ret == 1)
+        {
+                return Qtrue;
+        }
+        else
+        {
+                return Qfalse;
+        }
+}
+
 static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_manager_path)
 {
-	debug("start");
+	debug("start\n");
 	path *p;
 	Data_Get_Struct(flow_manager_path, path, p);
 	dump_path( p );
@@ -150,16 +110,14 @@ static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_
 	uint16_t _priority = p->priority;
 
 	bool ret = teardown_path(_in_datapath_id, _match, _priority );
-	printf("b : %d\n", ret);
+	debug("end with %d\n", ret);
 
 	if(ret == 1)
 	{
-		debug("end with true");
 		return Qtrue;
 	}
 	else
 	{
-		debug("end with false");
 		return Qfalse;
 	}
 }
@@ -193,69 +151,71 @@ static VALUE flow_manager_lookup(VALUE self, VALUE datapath_id, VALUE match, VAL
 	return obj;
 }
 
-static VALUE flow_manager_setup(VALUE self, VALUE flow_manager_path, VALUE controller)
+static VALUE flow_manager_setup(VALUE self, VALUE r_path, VALUE controller)
 {
 	debug("start\n");
 
 	path *p;
-	Data_Get_Struct(flow_manager_path, path, p);
+	Data_Get_Struct(r_path, path, p);
+	debug("path pointer : %p\n", p);
 
-	dump_path(p);
 	bool ret = setup_path( p, handle_setup, controller, handle_teardown, controller );
-
-	debug("ret : %d\n", ret);
+        debug("end with %d\n", ret);
 
 	if(ret == true)
 	{
-		debug("end with true \n");
 		return Qtrue;
 	}
 	else
 	{
-		debug("end with false \n");
 		return Qfalse;
 	}
 }
 
-static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE flow_manager_path, VALUE flow_manager_hop)
+static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE rpath, VALUE rhop)
 {
 	debug("start\n");
 
 	path *p;
 	hop *h;
-	Data_Get_Struct(flow_manager_path, path, p);
-	Data_Get_Struct(flow_manager_hop, hop, h);
+	Data_Get_Struct(rpath, path, p);
+	Data_Get_Struct(rhop, hop, h);
 
 	append_hop_to_path(p, h);
 
-	debug("Hop datapath_id : %d\n", h->datapath_id);
-	debug("Path n_hops : %d\n", p->n_hops);
 	debug("end\n");
 
 	return Qnil;
 }
 
-static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE flow_manager_path, VALUE rhops)
+static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rhops)
 {
 	debug("start\n");
 	path *p;
-	Data_Get_Struct(flow_manager_path, path, p);
+        hop *h;
 
-	  if ( rhops != Qnil ) {
-	    switch ( TYPE( rhops ) ) {
-	      case T_ARRAY:
-	        {
-	          VALUE *each = RARRAY_PTR( rhops );
-	          int i;
-	          for ( i = 0; i < RARRAY_LEN( rhops ); i++ ) {
-	        		append_hop_to_path(p, each[i]);
-	          }
-	        }
-	        break;
-	      default:
-	        rb_raise( rb_eTypeError, "hops argument must be an Array" );
-	    }
-	  }
+	Data_Get_Struct(rpath, path, p);
+
+        if ( rhops != Qnil ) {
+          debug("type : %d\n", TYPE(rhops));
+          switch ( TYPE( rhops ) ) {
+            case T_ARRAY:
+              {
+                VALUE *each = RARRAY_PTR( rhops );
+                int i;
+                for ( i = 0; i < RARRAY_LEN( rhops ); i++ ) {
+                              hop *h;
+                              Data_Get_Struct(each[i], hop, h);
+                              append_hop_to_path(p, h);
+                }
+              }
+              break;
+            default:
+              debug("start7\n");
+              rb_raise( rb_eTypeError, "hops argument must be an Array" );
+              break;
+          }
+        }
 
 	debug("end_\n");
 	return Qnil;
@@ -279,6 +239,7 @@ void Init_flow_manager_module()
 	rb_define_module_function(mFlowManager, "setup", flow_manager_setup, 2);
 	rb_define_module_function(mFlowManager, "lookup", flow_manager_lookup, 3);
 	rb_define_module_function(mFlowManager, "teardown", flow_manager_teardown, 2);
+        rb_define_module_function(mFlowManager, "teardown_by_match", flow_manager_teardown_by_match, 1);
 }
 
 

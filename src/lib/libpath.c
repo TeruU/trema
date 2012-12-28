@@ -27,6 +27,12 @@
 #include "utils.h"
 
 typedef struct {
+  hop public;
+  void *r_hop_pointer;
+  void *r_extra_actions_pointer;
+} hop_private;
+
+typedef struct {
   path public;
   uint64_t id;
   uint64_t in_datapath_id;
@@ -158,7 +164,7 @@ get_service_name( void ) {
   return service_name;
 }
 
-
+/*
 hop *
 create_hop( uint64_t datapath_id, uint16_t in_port, uint16_t out_port, openflow_actions *extra_actions ) {
   hop *h = xmalloc( sizeof( hop ) );
@@ -185,13 +191,53 @@ create_hop( uint64_t datapath_id, uint16_t in_port, uint16_t out_port, openflow_
   return h;
 }
 
-
 void
 delete_hop( hop *hop ) {
+  printf("hop %p will be deleted\n", hop );
   if ( hop->extra_actions != NULL ) {
+    printf("actions %p will be deleted\n", hop->extra_actions );
     delete_actions( hop->extra_actions );
   }
   xfree( hop );
+}
+*/
+
+hop *
+create_hop( uint64_t datapath_id, uint16_t in_port, uint16_t out_port, openflow_actions *extra_actions ) {
+  hop_private *h = xmalloc( sizeof( hop_private ) );
+
+  memset( h, 0, sizeof( hop_private ) );
+  h->public.datapath_id = datapath_id;
+  h->public.in_port = in_port;
+  h->public.out_port = out_port;
+  h->public.extra_actions = NULL;
+
+  if ( extra_actions != NULL ) {
+    h->public.extra_actions = create_actions();
+    list_element *element = extra_actions->list;
+    while ( element != NULL ) {
+      struct ofp_action_header *ah = element->data;
+      void *action = xmalloc( ah->len );
+      memcpy( action, ah, ah->len );
+      append_to_tail( &h->public.extra_actions->list, action );
+      h->public.extra_actions->n_actions++;
+      element = element->next;
+    }
+  }
+
+  return &h->public;
+}
+
+
+void
+delete_hop( hop *hop ) {
+  hop_private *private = ( hop_private * ) hop;
+  printf("libpath.c : hop %p will be deleted\n", private );
+  if ( hop->extra_actions != NULL ) {
+    printf("libpath.c : actions %p will be deleted\n", hop->extra_actions );
+    delete_actions( hop->extra_actions );
+  }
+  xfree( private );
 }
 
 
@@ -215,8 +261,6 @@ void
 append_hop_to_path( path *path, hop *hop ) {
   path_private *private = ( path_private * ) path;
 
-  puts("pass append_hop_to_path");
-
   if ( path->n_hops == 0 ) {
     private->in_datapath_id = hop->datapath_id;
   }
@@ -228,7 +272,7 @@ append_hop_to_path( path *path, hop *hop ) {
 
 void delete_path( path *path ) {
   path_private *private = ( path_private * ) path;
-
+  printf("libpath.c : path %p will be deleted\n", private );
   list_element *element = path->hops;
   while ( element != NULL ) {
     delete_hop( element->data );
@@ -239,10 +283,24 @@ void delete_path( path *path ) {
   xfree( private );
 }
 
-
+/*
 hop *
 copy_hop( const hop *hop ) {
   return create_hop( hop->datapath_id, hop->in_port, hop->out_port, hop->extra_actions );
+}
+*/
+
+hop *
+copy_hop( const hop *hop ) {
+  const hop_private *private = ( const hop_private * ) hop;
+  hop_private *copied = ( hop_private * ) create_hop( hop->datapath_id, hop->in_port, hop->out_port, hop->extra_actions );
+
+  copied->r_hop_pointer = private->r_hop_pointer;
+  if(private->r_extra_actions_pointer != NULL)
+  {
+      copied->r_extra_actions_pointer = private->r_extra_actions_pointer;
+  }
+  return &copied->public;
 }
 
 
@@ -401,6 +459,8 @@ setup_path( path *p, setup_handler setup_callback, void *setup_user_data,
 
   temp = NULL;
   path_private *private = ( path_private * ) copy_path( p );
+  printf("libpath.c 462 : path_private : %p\n", private);
+  printf("libpath.c 463 : hop : %p\n", private->public.hops->data);
 
   private->id = get_flow_entry_group_id();
   private->setup_callback = setup_callback;

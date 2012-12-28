@@ -22,12 +22,6 @@
 #include "ruby.h"
 #include "libpath.h"
 
-typedef struct {
-  hop public;
-  void *r_hop_pointer;
-  void *r_extra_actions_pointer;
-} hop_private;
-
 extern VALUE cHop;
 
 void Init_hop( void );

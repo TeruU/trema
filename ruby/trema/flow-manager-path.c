@@ -22,21 +22,35 @@
 #include "openflow.h"
 #include "ruby.h"
 #include "libpath.h"
-#include "libpath.c"
 #include "match.h"
 #include "flow-manager-hop.h"
+#include "utils.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
 #define debug(...) 1 ? (void) 0 : printf
 #endif
 
-VALUE cPath;
+//This structure exists in libpath.c
+typedef struct {
+  path public;
+  uint64_t id;
+  uint64_t in_datapath_id;
+  setup_handler setup_callback;
+  void *setup_user_data;
+  teardown_handler teardown_callback;
+  void *teardown_user_data;
+} path_private;
 
-static void dump_match( const struct ofp_match *match );
-static struct ofp_match *get_match( VALUE self );
+typedef struct {
+  hop public;
+  void *r_hop_pointer;
+  void *r_extra_actions_pointer;
+} hop_private;
+
+VALUE cPath;
 
 static void
 dump_match( const struct ofp_match *match ) {
@@ -44,7 +58,6 @@ dump_match( const struct ofp_match *match ) {
   match_to_string( match, match_string, sizeof( match_string ) );
   info( "Match: match = [%s]",match_string);
 }
-
 
 static VALUE path_priority(VALUE self)
 {
@@ -67,59 +80,28 @@ static VALUE path_hard_timeout(VALUE self)
 	return UINT2NUM(p->hard_timeout);
 }
 
-/*
 static VALUE path_hops(VALUE self)
 {
-	VALUE hops = rb_ary_new();
+    debug("start\n");
 
-	path *p;
-	Data_Get_Struct(self, path, p);
+    VALUE hops = rb_ary_new();
 
-	VALUE obj;
-	obj = rb_funcall( cHop, rb_intern( "new" ), 3, INT2NUM(0), INT2NUM(0), INT2NUM(0));
-	hop *h;
-	Data_Get_Struct( obj, hop, h );
+    path *p;
+    Data_Get_Struct(self, path, p);
 
     list_element *element = p->hops;
     while ( element != NULL ) {
-	    hop* temp = element->data;
-	    //void *hop = xmalloc( sizeof(hop) );
-	    //memcpy( hop, element->data , sizeof(hop));
+            hop_private *temp = (hop_private *)element->data;
 
-		h->datapath_id = temp->datapath_id;
-		h->extra_actions = temp->extra_actions;
-		h->in_port = temp->in_port;
-		h->out_port = temp->out_port;
+            //VALUE rHop = Data_Wrap_Struct(cHop, 0, -1, &temp->public );
+            //rb_ary_push(hops, rHop);
+            rb_ary_push(hops, (VALUE)temp->r_hop_pointer);
 
-	    rb_ary_push(hops, obj);
+            element = element->next;
+    }
 
-	    element = element->next;
-	 }
-
-	return hops;
-}
-*/
-
-static VALUE path_hops(VALUE self)
-{
-	debug("start\n");
-
-	VALUE hops = rb_ary_new();
-
-	path *p;
-	Data_Get_Struct(self, path, p);
-
-    list_element *element = p->hops;
-    while ( element != NULL ) {
-	    hop_private *temp = element->data;
-
-	    rb_ary_push(hops, (VALUE)temp->r_hop_pointer);
-
-	    element = element->next;
-	 }
-
-	debug("end\n");
-	return hops;
+    debug("end\n");
+    return hops;
 }
 
 static VALUE path_match(VALUE self)
@@ -163,7 +145,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 	VALUE match;
 
 	int nargs = rb_scan_args(argc, argv, "11", &match, &options);
-    Data_Get_Struct(match, struct ofp_match, _match );
+        Data_Get_Struct(match, struct ofp_match, _match );
 	p->match = (struct ofp_match)*_match;
 	dump_match(_match);
 
@@ -171,13 +153,16 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 	{
 		case 1:
 		{
-			debug("case1 passed\n");
 			//Do nothing
 			break;
 		}
 		case 2:
 		{
-			debug("case2 passed\n");
+			if(TYPE( options ) != T_HASH)
+                        {
+	                        rb_raise( rb_eTypeError, "The second argument should be hash." );
+                        }
+
 			if(options != Qnil)
 			{
 				VALUE priority = rb_hash_aref(options, ID2SYM( rb_intern( "priority" ) ) );
@@ -200,6 +185,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 		default:
 		{
 			rb_raise( rb_eTypeError, "The number of argument is invalid." );
+			break;
 		}
 	}
 
@@ -207,11 +193,21 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 	return Qnil;
 }
 
+static void delete_Path(path* path)
+{
+    debug("start\n");
+    path_private *private = ( path_private * ) path;
+    printf("path %p will be deleted\n", private );
+    delete_list( path->hops );
+    xfree( private );
+    debug("end\n");
+}
+
 static VALUE create_Path(VALUE klass)
 {
 	debug("start\n");
-	path_private *pp = xmalloc( sizeof( path_private ) );
-	memset(pp, 0, sizeof( path_private ) );
+	path_private *pp = ALLOC( path_private );
+	debug("pass private %p is created.\n", pp);
 	pp->public.priority = 65535;
 	pp->public.idle_timeout = 30;
 	pp->public.hard_timeout = 30;
@@ -219,9 +215,12 @@ static VALUE create_Path(VALUE klass)
 	create_list( &pp->public.hops );
 
 	path *p = &pp->public;
-
+	debug("pass %p.\n", p);
+	VALUE rPath = Data_Wrap_Struct(klass, 0, -1, p);
+	debug("ruby pass %p is created.\n", rPath);
 	debug("end\n");
-	return Data_Wrap_Struct(klass, 0, delete_path, p);
+
+	return rPath;
 }
 
 void Init_path()
@@ -235,5 +234,3 @@ void Init_path()
 	rb_define_method(cPath, "match", path_match, 0);
 	rb_define_method(cPath, "hops", path_hops, 0);
 }
-
-

@@ -15,9 +15,12 @@
 #include "match.h"
 #include "openflow.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 #define FLOW_MANAGER_NAME "flow_manager_test_service"
 
+//This structure exists in "libpath.c" also.
+//Here, we include it for the test.
 typedef struct {
   path public;
   uint64_t id;
@@ -1415,7 +1418,7 @@ test_create_flow_entry()
   assert_int_equal(fe->idle_timeout, 10);
   assert_int_equal(fe->hard_timeout, 10);
   assert_int_equal(fe->datapath_id, 1);
-  assert_true(compare_match(&match, &fe->match));
+  assert_true( compare_match( &match, &fe->match ) );
   assert_int_equal(fe->actions_length, sizeof(struct ofp_action_output) );
   assert_int_equal(action_header->len, 8);
   assert_int_equal(action_header->type, 0);
@@ -1448,7 +1451,7 @@ test_create_flow_entry_with_actions_null()
   assert_int_equal(fe->idle_timeout, 10);
   assert_int_equal(fe->hard_timeout, 10);
   assert_int_equal(fe->datapath_id, 1);
-  assert_true(compare_match(&match, &fe->match));
+  assert_true( compare_match( &match, &fe->match ) );
   assert_int_equal(fe->actions_length, 0 );
 
   free_buffer(entries);
@@ -1653,17 +1656,18 @@ int main( int argc, char *argv[] ) {
     unit_test( test_create_flow_entry_group_teardown_request ),
     unit_test( test_create_flow_entry_group_teardown_reply ),
     unit_test( test_create_flow_entry_group_teardown ),
-    //unit_test( test_setup_path_duplicate),
-    //unit_test( test_teardown_path_not_found ),
-    //unit_test( test_flow_manager_flow_entry_group_setup_request ),
-    //unit_test( test_flow_manager_flow_entry_group_teardown_request),
-    //unit_test( test_setup_path ),
-    //unit_test( test_teardown_path ),
-    //unit_test( test_teardown_path_by_match),
-    //unit_test( test_lookup_path_not_found ),
-    //unit_test( test_lookup_path_by_match ),
+    unit_test( test_setup_path_duplicate),
+    unit_test( test_teardown_path_not_found ),
+    unit_test( test_flow_manager_flow_entry_group_setup_request ),
+    unit_test( test_flow_manager_flow_entry_group_teardown_request),
+    unit_test( test_setup_path ),
+    unit_test( test_teardown_path ),
+    unit_test( test_teardown_path_by_match),
+    unit_test( test_lookup_path ),
+    unit_test( test_lookup_path_not_found ),
+    unit_test( test_lookup_path_by_match ),
     unit_test( test_lookup_path_by_match_max_paths_is_too_short ),
-    //unit_test( test_lookup_path ),
+
     //Please test below functions by manual
     //unit_test( test_flow_entry_request_undefined ),
     //unit_test( test_flow_entry_group_setup_request_too_short ),
@@ -1681,20 +1685,22 @@ int main( int argc, char *argv[] ) {
   UNUSED( callback_topology_response );
   */
 
+  /*
   UNUSED( test_teardown_path );
   UNUSED( test_teardown_path_by_match);
   UNUSED( test_lookup_path);
-  UNUSED( test_flow_entry_request_undefined );
-  UNUSED( test_flow_entry_group_setup_request_too_short );
-  UNUSED( test_flow_entry_group_teardown_request_too_short );
   UNUSED( test_setup_path );
   UNUSED( test_flow_manager_flow_entry_group_setup_request );
   UNUSED( test_flow_manager_flow_entry_group_teardown_request);
-
   UNUSED( test_setup_path_duplicate );
   UNUSED( test_teardown_path_not_found );
   UNUSED( test_lookup_path_not_found );
   UNUSED( test_lookup_path_by_match );
+  */
+
+  UNUSED( test_flow_entry_request_undefined );
+  UNUSED( test_flow_entry_group_setup_request_too_short );
+  UNUSED( test_flow_entry_group_teardown_request_too_short );
 
   setup_leak_detector();
   return run_tests( tests );
