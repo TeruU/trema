@@ -66,106 +66,110 @@ describe Hop, ".new" do
     @path2 = Path.new(match2, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
   end
 
-  describe "#initialize" do
-    context "single argument" do
-      it{
-        match = Match.new()
-        Path.new(match).instance_of?(Path).should == true
-      }
-    end
-
-    context "two arguments" do
-      it{
-        match = Match.new()
-        Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535}).instance_of?(Path).should == true
-      }
-    end
-
-    context "three arguments" do
-      it{
-        match = Match.new()
-        expect {Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535}, 1)}.to raise_error() 
-      }
-    end
-
-    context "bad arguments" do
-      it{
-        match = Match.new()
-        expect {Path.new(match, 1)}.to raise_error("The second argument should be hash.") 
-      }
-    end
+  it "single argument" do
+    match = Match.new()
+    Path.new(match).instance_of?(Path).should == true
   end
 
-  describe "#path_hops" do
-    context "path" do
-      it{
-        hopArray = @path.hops
-        hopArray[0].datapath_id.should == 0x1
-        hopArray[0].in_port.should == 1
-        hopArray[0].out_port.should == 2
-        hopArray[1].datapath_id.should == 0x2
-        hopArray[1].in_port.should == 2
-        hopArray[1].out_port.should == 1
-        hopArray[2].should be_nil
-      }
-    end
+  it "two arguments" do
+    match = Match.new()
+    Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535}).instance_of?(Path).should == true
   end
 
-  describe "#priority" do
-    context "pri" do
-      it{
-        @path.priority.should == 65535
-        @path2.priority.should == 65535
-      }
-    end
+  it "three arguments" do
+    match = Match.new()
+    expect {Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535}, 1)}.to raise_error() 
   end
-  
 
-  describe "#hard_timeout" do
-    context "h_time" do
-      it{
-        @path.hard_timeout.should == 5
-        @path2.hard_timeout.should == 5
-      }
-    end
+  it "minus arguments" do
+    match = Match.new()
+    expect {Path.new(match, options={:idle_timeout=>-1, :hard_timeout=>5, :priority=>65535})}.to raise_error() 
+  end
+
+  it "minus arguments" do
+    match = Match.new()
+    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>-5, :priority=>65535})}.to raise_error() 
+  end
+
+  it "minus arguments" do
+    match = Match.new()
+    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>5, :priority=>-65535})}.to raise_error() 
+  end
+
+  it "bad arguments" do
+    match = Match.new()
+    expect {Path.new(match, 1)}.to raise_error("The second argument should be hash.") 
+  end
+
+  it "path" do
+
+    hopArray = @path.hops
+    hopArray[0].datapath_id.should == 0x1
+    hopArray[0].in_port.should == 1
+    hopArray[0].out_port.should == 2
+    hopArray[1].datapath_id.should == 0x2
+    hopArray[1].in_port.should == 2
+    hopArray[1].out_port.should == 1
+    hopArray[2].should be_nil
+
   end
 
 
-  describe "#idle_timeout" do
-    context "i_time" do
-      it{
-        @path.idle_timeout.should == 5
-        @path2.idle_timeout.should == 5
-      }
-    end
+
+  it "priority" do
+
+    @path.priority.should == 65535
+    @path2.priority.should == 65535
+
   end
 
-  describe "#path_match" do
-    context "p_match" do
-      it{
-        passed_match1 = @path.match
-        match = Match.new()
-        passed_match1.compare(match).should == true
 
-        passed_match2 = @path2.match
-        match2 = Match.new(
-          :in_port => 1,
-          :dl_src => "00:00:00:00:00:01",
-          :dl_dst => "00:00:00:00:00:02",
-          :dl_vlan => 65535,
-          :dl_vlan_pcp => 0,
-          :dl_type => 0x800,
-          :nw_tos => 0,
-          :nw_proto => 17,
-          :nw_src => "192.168.0.1",
-          :nw_dst => "192.168.0.0/24",
-          :tp_src => 10,
-          :tp_dst => 20
-        )
-        passed_match2.compare(match2).should == true
-      }
-    end
+
+
+  it "hard_timeout" do
+
+    @path.hard_timeout.should == 5
+    @path2.hard_timeout.should == 5
+
   end
+
+
+
+
+  it "idle_timeout" do
+
+    @path.idle_timeout.should == 5
+    @path2.idle_timeout.should == 5
+
+  end
+
+
+
+  it "p_match" do
+
+      passed_match1 = @path.match
+      match = Match.new()
+      passed_match1.compare(match).should == true
+
+      passed_match2 = @path2.match
+      match2 = Match.new(
+        :in_port => 1,
+        :dl_src => "00:00:00:00:00:01",
+        :dl_dst => "00:00:00:00:00:02",
+        :dl_vlan => 65535,
+        :dl_vlan_pcp => 0,
+        :dl_type => 0x800,
+        :nw_tos => 0,
+        :nw_proto => 17,
+        :nw_src => "192.168.0.1",
+        :nw_dst => "192.168.0.0/24",
+        :tp_src => 10,
+        :tp_dst => 20
+      )
+      passed_match2.compare(match2).should == true
+
+  end
+
 
   after do
   	@path = nil

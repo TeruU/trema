@@ -105,6 +105,30 @@ describe Hop, "test" do
         expect {Hop.new(datapath_id, in_port, out_port, actions)}.to raise_error("actions argument must be an Array or an Action object")
   end
 
+
+  it "3 arguments with zeros" do
+        hop = Hop.new(0x0, 0, 0)
+        hop.datapath_id.should == 0
+        hop.in_port.should == 0
+        hop.out_port.should == 0
+  end
+
+  it "3 arguments with big value" do
+        expect {hop = Hop.new(1000000000000000000000000000000000000000000000000000, 1, 1)}.to raise_error()
+  end
+
+  it "3 arguments with minus value" do
+        expect {hop = Hop.new(-1, -1, -1)}.to raise_error()
+  end
+
+  it "3 arguments with minus value" do
+        expect {hop = Hop.new(1, -1, 1)}.to raise_error()
+  end
+
+  it "3 arguments with minus value" do
+        expect {hop = Hop.new(1, 1, -1)}.to raise_error()
+  end
+
   it ".datapath_id" do
     	@hop.datapath_id.should == 0x1
       @hop2.datapath_id.should == 0x2
@@ -156,7 +180,7 @@ describe Hop, "test" do
         body[1].should == "test2"
 
         action = @hop3.actions
-        action.body.should be_nil 
+        action.instance_of?(VendorAction).should == true
   end
 	
   after do

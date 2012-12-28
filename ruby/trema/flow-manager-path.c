@@ -26,7 +26,7 @@
 #include "flow-manager-hop.h"
 #include "utils.h"
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
@@ -61,23 +61,23 @@ dump_match( const struct ofp_match *match ) {
 
 static VALUE path_priority(VALUE self)
 {
-	path *p;
-	Data_Get_Struct(self, path, p);
-	return UINT2NUM(p->priority);
+    path *p;
+    Data_Get_Struct(self, path, p);
+    return UINT2NUM(p->priority);
 }
 
 static VALUE path_idle_timeout(VALUE self)
 {
-	path *p;
-	Data_Get_Struct(self, path, p);
-	return UINT2NUM(p->idle_timeout);
+    path *p;
+    Data_Get_Struct(self, path, p);
+    return UINT2NUM(p->idle_timeout);
 }
 
 static VALUE path_hard_timeout(VALUE self)
 {
-	path *p;
-	Data_Get_Struct(self, path, p);
-	return UINT2NUM(p->hard_timeout);
+    path *p;
+    Data_Get_Struct(self, path, p);
+    return UINT2NUM(p->hard_timeout);
 }
 
 static VALUE path_hops(VALUE self)
@@ -106,91 +106,109 @@ static VALUE path_hops(VALUE self)
 
 static VALUE path_match(VALUE self)
 {
-	debug("start\n");
-	path *p;
-	Data_Get_Struct(self, path, p);
-	dump_match(&p->match);
+    debug("start\n");
+    path *p;
+    Data_Get_Struct(self, path, p);
+    dump_match(&p->match);
 
-	VALUE obj;
-	obj = rb_funcall( cMatch, rb_intern( "new" ), 0 );
-	struct ofp_match *match;
-	Data_Get_Struct( obj, struct ofp_match, match );
+    VALUE obj;
+    obj = rb_funcall( cMatch, rb_intern( "new" ), 0 );
+    struct ofp_match *match;
+    Data_Get_Struct( obj, struct ofp_match, match );
 
-	memcpy(match->dl_dst, p->match.dl_dst, OFP_ETH_ALEN);
-	memcpy(match->dl_src, p->match.dl_src, OFP_ETH_ALEN);
-	match->dl_type = p->match.dl_type;
-	match->dl_vlan = p->match.dl_vlan;
-	match->dl_vlan_pcp = p->match.dl_vlan_pcp;
-	match->in_port = p->match.in_port;
-	match->nw_dst = p->match.nw_dst;
-	match->nw_proto = p->match.nw_proto;
-	match->nw_src = p->match.nw_src;
-	match->nw_tos = p->match.nw_tos;
-	match->tp_dst = p->match.tp_dst;
-	match->tp_src = p->match.tp_src;
-	match->wildcards = p->match.wildcards;
+    memcpy(match->dl_dst, p->match.dl_dst, OFP_ETH_ALEN);
+    memcpy(match->dl_src, p->match.dl_src, OFP_ETH_ALEN);
+    match->dl_type = p->match.dl_type;
+    match->dl_vlan = p->match.dl_vlan;
+    match->dl_vlan_pcp = p->match.dl_vlan_pcp;
+    match->in_port = p->match.in_port;
+    match->nw_dst = p->match.nw_dst;
+    match->nw_proto = p->match.nw_proto;
+    match->nw_src = p->match.nw_src;
+    match->nw_tos = p->match.nw_tos;
+    match->tp_dst = p->match.tp_dst;
+    match->tp_src = p->match.tp_src;
+    match->wildcards = p->match.wildcards;
 
-	debug("end\n");
-	return obj;
+    debug("end\n");
+    return obj;
 }
 
 static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 {
-	debug("start\n");
-	path *p;
-	Data_Get_Struct(self, path, p);
+    debug("start\n");
+    path *p;
+    Data_Get_Struct(self, path, p);
 
-	struct ofp_match *_match;
-	VALUE options;
-	VALUE match;
+    struct ofp_match *_match;
+    VALUE options;
+    VALUE match;
 
-	int nargs = rb_scan_args(argc, argv, "11", &match, &options);
-        Data_Get_Struct(match, struct ofp_match, _match );
-	p->match = (struct ofp_match)*_match;
-	dump_match(_match);
+    int nargs = rb_scan_args(argc, argv, "11", &match, &options);
+    Data_Get_Struct(match, struct ofp_match, _match );
+    p->match = (struct ofp_match)*_match;
+    dump_match(_match);
 
-	switch(nargs)
-	{
-		case 1:
-		{
-			//Do nothing
-			break;
-		}
-		case 2:
-		{
-			if(TYPE( options ) != T_HASH)
-                        {
-	                        rb_raise( rb_eTypeError, "The second argument should be hash." );
-                        }
+    switch(nargs)
+    {
+        case 1:
+        {
+            //Do nothing
+            break;
+        }
+        case 2:
+        {
+            if(TYPE( options ) != T_HASH)
+            {
+                rb_raise( rb_eTypeError, "The second argument should be hash." );
+            }
 
-			if(options != Qnil)
-			{
-				VALUE priority = rb_hash_aref(options, ID2SYM( rb_intern( "priority" ) ) );
-				if ( priority != Qnil ) {
-					p->priority = NUM2UINT( priority );
-				}
+            if(options != Qnil)
+            {
+                VALUE priority = rb_hash_aref(options, ID2SYM( rb_intern( "priority" ) ) );
+                if ( priority != Qnil ) {
 
-				VALUE idle_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "idle_timeout" ) ) );
-				if ( idle_timeout != Qnil ) {
-					p->idle_timeout = NUM2UINT( idle_timeout );
-				}
+                    if(NUM2INT(priority)<0)
+                    {
+                      rb_raise( rb_eRangeError, "Please input positive integer" );
+                    }
 
-				VALUE hard_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "hard_timeout" ) ) );
-				if ( hard_timeout != Qnil ) {
-					p->hard_timeout = NUM2UINT( hard_timeout );
-				}
-			}
-			break;
-		}
-		default:
-		{
-			rb_raise( rb_eTypeError, "The number of argument is invalid." );
-			break;
-		}
-	}
+                    p->priority = NUM2UINT( priority );
+                }
 
-	debug("end\n");
-	return Qnil;
+                VALUE idle_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "idle_timeout" ) ) );
+                if ( idle_timeout != Qnil ) {
+
+                    if(NUM2INT(idle_timeout)<0)
+                    {
+                      rb_raise( rb_eRangeError, "Please input positive integer" );
+                    }
+
+                    p->idle_timeout = NUM2UINT( idle_timeout );
+                }
+
+                VALUE hard_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "hard_timeout" ) ) );
+                if ( hard_timeout != Qnil ) {
+
+                    if(NUM2INT(hard_timeout)<0)
+                    {
+                      rb_raise( rb_eRangeError, "Please input positive integer" );
+                    }
+
+                    p->hard_timeout = NUM2UINT( hard_timeout );
+                }
+            }
+            break;
+        }
+        default:
+        {
+            rb_raise( rb_eTypeError, "The number of argument is invalid." );
+            break;
+        }
+    }
+
+    debug("end\n");
+    return Qnil;
 }
 
 static void delete_Path(path* path)
@@ -205,23 +223,25 @@ static void delete_Path(path* path)
 
 static VALUE create_Path(VALUE klass)
 {
-	debug("start\n");
-	path_private *pp = ALLOC( path_private );
-	memset( pp, 0, sizeof( path_private ) );
-	debug("pass private %p is created.\n", pp);
-	pp->public.priority = 65535;
-	pp->public.idle_timeout = 30;
-	pp->public.hard_timeout = 30;
-	pp->public.n_hops = 0;
-	create_list( &pp->public.hops );
+    debug("start\n");
+    path_private *pp = ALLOC( path_private );
+    memset( pp, 0, sizeof( path_private ) );
+    debug("pass private %p is created.\n", pp);
 
-	path *p = &pp->public;
-	debug("pass %p.\n", p);
-	VALUE rPath = Data_Wrap_Struct(klass, 0, -1, p);
-	debug("ruby pass %p is created.\n", rPath);
-	debug("end\n");
+    //default value
+    pp->public.priority = 65535;
+    pp->public.idle_timeout = 30;
+    pp->public.hard_timeout = 30;
+    pp->public.n_hops = 0;
+    create_list( &pp->public.hops );
 
-	return rPath;
+    path *p = &pp->public;
+    debug("pass %p.\n", p);
+    VALUE rPath = Data_Wrap_Struct(klass, 0, -1, p);
+    debug("ruby pass %p is created.\n", rPath);
+    debug("end\n");
+
+    return rPath;
 }
 
 void Init_path()

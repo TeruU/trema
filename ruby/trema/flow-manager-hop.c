@@ -176,6 +176,11 @@ static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
         VALUE actions;
         int nargs = rb_scan_args(argc, argv, "31", &datapath_id, &in_port, &out_port, &actions);
 
+        if(NUM2INT(datapath_id)<0 || NUM2INT(in_port)<0 || NUM2INT(out_port)<0)
+        {
+          rb_raise( rb_eRangeError, "Please input positive integer." );
+        }
+
         openflow_actions *_actions;
 
         switch(nargs)
