@@ -22,7 +22,7 @@
 #include "flow-manager-hop.h"
 #include "utils.h"
 
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
@@ -236,9 +236,10 @@ static void delete_Hop(hop* hop)
 static VALUE create_Hop(VALUE klass)
 {
         hop_private *ph = ALLOC( hop_private );
-
+        memset( ph, 0, sizeof( hop_private ) );
         debug("hop_private %p is created\n", ph);
         hop *h = &ph->public;
+        debug("dpid : %d", h->datapath_id);
         debug("hop pointer is %p\n", h);
         VALUE rHop = Data_Wrap_Struct(klass, 0, -1, h );
         debug("ruby hop %p is created\n", ph->r_hop_pointer);

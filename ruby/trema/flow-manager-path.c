@@ -207,6 +207,7 @@ static VALUE create_Path(VALUE klass)
 {
 	debug("start\n");
 	path_private *pp = ALLOC( path_private );
+	memset( pp, 0, sizeof( path_private ) );
 	debug("pass private %p is created.\n", pp);
 	pp->public.priority = 65535;
 	pp->public.idle_timeout = 30;
