@@ -26,54 +26,24 @@ class FlowManagerController < Controller
   end
   
   def flow_manager_setup_reply(status, path)
-  	info "************************flow_manager_setup_reply********************" 
-  	info status  	
-    p path
-    p path.priority()
-    p path.idle_timeout()
-    p path.hard_timeout()
-    p path.match()
-    arrHops = path.hops()
-    p arrHops[0].datapath_id()
-    p arrHops[0].in_port()
-    p arrHops[0].out_port()
-    p arrHops[0].actions()
-    p arrHops[1].datapath_id()
-    p arrHops[1].in_port()
-    p arrHops[1].out_port()
-    p arrHops[1].actions()
+    info "*** flow_manager_setup_reply" 
+    info "status:" + status 
 
     match = Match.new(:in_port => 1)
-    p match
-    puts "****************lookup start******************"
+
+    info "***lookup start"
     
     lookuppath = Flow_manager.lookup(0x1, match, 65535)
-    info "path lookup success"
-    p lookuppath
-    p lookuppath.priority()
-    p lookuppath.idle_timeout()
-    p lookuppath.hard_timeout()
-    p lookuppath.match()
-    puts "*****************lookup finish***************"
+
+    info "path.priority:" + path.priority().inspect
+    info "path.idle:" + path.idle_timeout().inspect
+    info "path.hard_timeout:" + path.hard_timeout().inspect
+    info "path.match:" + path.match().inspect
   end
   
   def flow_manager_teardown_reply(reason, path)
-  	info "*************************flow_manager_teardown_reply*****************" 
-  	info reason
-    p path
-    p path.priority()
-    p path.idle_timeout()
-    p path.hard_timeout()
-    p path.match()
-    arrHops = path.hops()
-    p arrHops[0].datapath_id()
-    p arrHops[0].in_port()
-    p arrHops[0].out_port()
-    p arrHops[0].actions()
-    p arrHops[1].datapath_id()
-    p arrHops[1].in_port()
-    p arrHops[1].out_port()
-    p arrHops[1].actions()
+  	info "***flow_manager_teardown_reply" 
+    info "reason:" + reason
   end 
   
   def switch_ready datapath_id
@@ -86,23 +56,10 @@ class FlowManagerController < Controller
     Array actions = [StripVlanHeader.new, SendOutPort.new(1)]
 
   	hop = Hop.new(0x1, 1, 2, actions)
-	  p hop
-	  p hop.datapath_id()
-	  p hop.in_port()
-	  p hop.out_port()
-    p hop.actions()
-
     hop2 = Hop.new(0x2, 2, 1)
 	
   	match = Match.new(:in_port => 1)
-  	p match
-  	
     path = Path.new(match, options={:idle_timeout=>5})
-    p path
-    p path.priority()
-    p path.idle_timeout()
-    p path.hard_timeout()
-    p path.match()
     
     Flow_manager.append_hop_to_path(path, hop)
     Flow_manager.append_hop_to_path(path, hop2)

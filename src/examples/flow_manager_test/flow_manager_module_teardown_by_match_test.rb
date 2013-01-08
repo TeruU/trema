@@ -26,18 +26,18 @@ class FlowManagerController < Controller
   end
   
   def flow_manager_setup_reply(status, path)
-    info "************************flow_manager_setup_reply********************" 
-    info status   
+    info "*** flow_manager_setup_reply" 
+    info "status:" + status  
 
     match = Match.new(:in_port => 1)
     bool = Flow_manager.teardown_by_match(match)
     
-    p bool
+    info "teardown bool:" + bool.inspect()
   end
   
   def flow_manager_teardown_reply(reason, path)
-    info "*************************flow_manager_teardown_reply*****************" 
-    info reason
+    info "*** start flow_manager_teardown_reply" 
+    info "reason:" + reason
   end 
   
   def switch_ready datapath_id
@@ -50,23 +50,11 @@ class FlowManagerController < Controller
     Array actions = [StripVlanHeader.new, SendOutPort.new(1)]
 
     hop = Hop.new(0x1, 1, 2, actions)
-    p hop
-    p hop.datapath_id()
-    p hop.in_port()
-    p hop.out_port()
-    p hop.actions()
-
     hop2 = Hop.new(0x2, 2, 1)
   
     match = Match.new(:in_port => 1)
-    p match
     
     path = Path.new(match, options={:idle_timeout=>30})
-    p path
-    p path.priority()
-    p path.idle_timeout()
-    p path.hard_timeout()
-    p path.match()
     
     Flow_manager.append_hop_to_path(path, hop)
     Flow_manager.append_hop_to_path(path, hop2)

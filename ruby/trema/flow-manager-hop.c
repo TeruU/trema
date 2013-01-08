@@ -22,7 +22,7 @@
 #include "flow-manager-hop.h"
 #include "utils.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
@@ -229,9 +229,9 @@ static void delete_Hop(hop* hop)
 {
     debug("start\n");
     hop_private *private = ( hop_private * ) hop;
-    printf("hop %p will be deleted\n", private );
+    debug("hop %p will be deleted\n", private );
     if ( hop->extra_actions != NULL ) {
-      printf("actions %p will be deleted\n", hop->extra_actions );
+      debug("actions %p will be deleted\n", hop->extra_actions );
       delete_actions( hop->extra_actions );
     }
     xfree( private );

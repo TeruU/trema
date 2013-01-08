@@ -51,6 +51,39 @@ compare_path_private( const void *x, const void *y ) {
   return false;
 }
 
+static void
+start_flow_manager()
+{
+  system("./build.rb");
+  system("./trema run -c src/examples/flow_manager_test/cflow_manager.conf -d");
+}
+
+static void
+stop_flow_manager()
+{
+  char buf[50];
+  FILE *fp;
+  char *pid;
+  char str[50];
+
+  if((fp = fopen("./tmp/pid/flow_manager.pid", "r")) == NULL)
+  {
+     exit(2);
+  }
+
+  if((pid = fgets(buf, 50, fp)) != NULL)
+  {
+    printf("%s\n", pid);
+    sprintf(str, "kill -2 %s", pid );
+    printf("%s\n", str);
+    system(str);
+  }
+
+  fclose(fp);
+  system("./trema killall");
+}
+
+
 /***********************************
  * Test functions
  ***********************************/
@@ -1117,6 +1150,7 @@ test_flow_manager_flow_entry_group_setup_request() {
 
   void* user_data = NULL;
 
+
   init_messenger( "/home/openflow/workspace/trema/trema/tmp/sock" );
   init_timer();
 
@@ -1615,25 +1649,7 @@ int main( int argc, char *argv[] ) {
   _argv = argv;
 
   const UnitTest tests[] = {
-	/*
-    unit_test_setup_teardown( test_init_libtopology,
-                              setup, teardown ),
-    unit_test_setup_teardown( test_subscribe_topology,
-                              setup, teardown ),
-    unit_test( test_duplicate_subscribe_topology ),
-    unit_test_setup_teardown( test_unsubscribe_topology,
-                              setup, teardown ),
-    unit_test( test_duplicate_unsubscribe_topology ),
-    unit_test( test_get_all_link_status ),
-    unit_test( test_get_all_port_status ),
-    unit_test( test_get_all_switch_status ),
-    unit_test( test_enable_topology_discovery ),
-    unit_test( test_disable_topology_discovery ),
-    unit_test( test_add_callback_switch_status_updated ),
-    unit_test( test_add_callback_link_status_updated ),
-    unit_test( test_add_callback_port_status_updated ),
-    unit_test( test_respond_to_ping_from_flow_manager ),
-    */
+
     unit_test( test_status_to_string ),
     unit_test( test_reason_to_string ),
     unit_test( test_get_flow_entry_group_id ),
@@ -1656,17 +1672,19 @@ int main( int argc, char *argv[] ) {
     unit_test( test_create_flow_entry_group_teardown_request ),
     unit_test( test_create_flow_entry_group_teardown_reply ),
     unit_test( test_create_flow_entry_group_teardown ),
-    unit_test( test_setup_path_duplicate),
-    unit_test( test_teardown_path_not_found ),
-    unit_test( test_flow_manager_flow_entry_group_setup_request ),
-    unit_test( test_flow_manager_flow_entry_group_teardown_request),
-    unit_test( test_setup_path ),
-    unit_test( test_teardown_path ),
-    unit_test( test_teardown_path_by_match),
-    unit_test( test_lookup_path ),
-    unit_test( test_lookup_path_not_found ),
-    unit_test( test_lookup_path_by_match ),
-    unit_test( test_lookup_path_by_match_max_paths_is_too_short ),
+
+
+    unit_test_setup_teardown( test_flow_manager_flow_entry_group_setup_request, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_flow_manager_flow_entry_group_teardown_request, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_setup_path, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_setup_path_duplicate, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_teardown_path, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_teardown_path_by_match, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_teardown_path_not_found, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_lookup_path, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_lookup_path_not_found, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_lookup_path_by_match, start_flow_manager, stop_flow_manager),
+    unit_test_setup_teardown( test_lookup_path_by_match_max_paths_is_too_short, start_flow_manager, stop_flow_manager),
 
     //Please test below functions by manual
     //unit_test( test_flow_entry_request_undefined ),
@@ -1685,22 +1703,24 @@ int main( int argc, char *argv[] ) {
   UNUSED( callback_topology_response );
   */
 
-  /*
-  UNUSED( test_teardown_path );
-  UNUSED( test_teardown_path_by_match);
-  UNUSED( test_lookup_path);
-  UNUSED( test_setup_path );
   UNUSED( test_flow_manager_flow_entry_group_setup_request );
   UNUSED( test_flow_manager_flow_entry_group_teardown_request);
-  UNUSED( test_setup_path_duplicate );
+  UNUSED( test_setup_path );
+  UNUSED( test_setup_path_duplicate);
+  UNUSED( test_teardown_path );
+  UNUSED( test_teardown_path_by_match);
   UNUSED( test_teardown_path_not_found );
+  UNUSED( test_lookup_path );
   UNUSED( test_lookup_path_not_found );
   UNUSED( test_lookup_path_by_match );
-  */
+  UNUSED( test_lookup_path_by_match_max_paths_is_too_short );
 
   UNUSED( test_flow_entry_request_undefined );
   UNUSED( test_flow_entry_group_setup_request_too_short );
   UNUSED( test_flow_entry_group_teardown_request_too_short );
+
+  UNUSED( start_flow_manager );
+  UNUSED( stop_flow_manager );
 
   setup_leak_detector();
   return run_tests( tests );

@@ -26,7 +26,7 @@
 #include "flow-manager-hop.h"
 #include "utils.h"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
 #else
@@ -215,7 +215,7 @@ static void delete_Path(path* path)
 {
     debug("start\n");
     path_private *private = ( path_private * ) path;
-    printf("path %p will be deleted\n", private );
+    debug("path %p will be deleted\n", private );
     delete_list( path->hops );
     xfree( private );
     debug("end\n");

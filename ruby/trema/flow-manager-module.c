@@ -56,8 +56,7 @@ handle_setup( int status, const path *p, void *controller ) {
 
   VALUE obj = Data_Wrap_Struct(cPath, 0, 0, p);
   debug("path pointer : %p\n", p);
-  dump_path( p );
-  info( "***end dump_path");
+  debug(dump_path( p ));
 
   if ( rb_respond_to( ( VALUE ) controller, rb_intern( "flow_manager_setup_reply" ) ) == Qtrue ) {
     rb_funcall( ( VALUE ) controller, rb_intern( "flow_manager_setup_reply" ), 2, rb_str_new2(status_to_string( status )), obj);
@@ -70,8 +69,7 @@ handle_teardown( int reason, const path *p, void *controller ) {
 
   VALUE obj = Data_Wrap_Struct(cPath, 0, 0, p);
   debug("path pointer : %p\n", p);
-  dump_path( p );
-  info( "***end dump_path");
+  debug(dump_path( p ));
 
   if ( rb_respond_to( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ) ) == Qtrue ) {
     rb_funcall( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ), 2, rb_str_new2(reason_to_string( reason )), obj);
@@ -103,7 +101,7 @@ static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_
     debug("start\n");
     path *p;
     Data_Get_Struct(flow_manager_path, path, p);
-    dump_path( p );
+    debug(dump_path( p ));
 
     uint64_t _in_datapath_id = NUM2INT(in_datapath_id);
     struct ofp_match _match = p->match;
@@ -139,7 +137,7 @@ static VALUE flow_manager_lookup(VALUE self, VALUE datapath_id, VALUE match, VAL
     path *_path;
     Data_Get_Struct( obj, path, _path );
 
-    dump_path(p);
+    debug(dump_path( p ));
     _path->hard_timeout = p->hard_timeout;
     _path->hops = p->hops;
     _path->idle_timeout = p->idle_timeout;
