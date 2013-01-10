@@ -20,7 +20,7 @@
 #include "ruby.h"
 #include "libpath.h"
 #include "flow-manager-hop.h"
-#include "utils.h"
+#include "libpath_utils.h"
 
 //#define DEBUG
 #ifdef DEBUG

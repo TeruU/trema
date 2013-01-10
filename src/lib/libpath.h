@@ -1,6 +1,4 @@
 /*
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2011 NEC Corporation
  *
  * This program is free software; you can redistribute it and/or modify
@@ -89,11 +87,3 @@ bool finalize_path( void );
 
 
 #endif // LIBPATH_H
-
-
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

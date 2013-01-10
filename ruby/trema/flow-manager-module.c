@@ -23,7 +23,7 @@
 #include "flow-manager-path.h"
 #include "flow-manager-hop.h"
 #include "match.h"
-#include "utils.h"
+#include "libpath_utils.h"
 
 //#define DEBUG
 #ifdef DEBUG
@@ -228,6 +228,15 @@ static VALUE init_flow_manager(VALUE self)
     return Qnil;
 }
 
+static VALUE finalize_flow_manager(VALUE self)
+{
+  debug("start\n");
+  finalize_path();
+  debug("end\n");
+
+  return Qnil;
+}
+
 void Init_flow_manager_module()
 {
     mFlowManager = rb_define_module("Flow_manager");
@@ -238,6 +247,7 @@ void Init_flow_manager_module()
     rb_define_module_function(mFlowManager, "lookup", flow_manager_lookup, 3);
     rb_define_module_function(mFlowManager, "teardown", flow_manager_teardown, 2);
     rb_define_module_function(mFlowManager, "teardown_by_match", flow_manager_teardown_by_match, 1);
+    rb_define_module_function(mFlowManager, "finalize", finalize_flow_manager, 0);
 }
 
 

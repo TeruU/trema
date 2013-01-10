@@ -5,17 +5,17 @@
 #include <unistd.h>
 #include <mcheck.h>
 #include <ctype.h>
+#include <stddef.h>
+#include <stdbool.h>
 #include "checks.h"
 #include "cmockery_trema.h"
 #include "libpath.h"
 #include "event_handler.h"
 #include "messenger.h"
-#include "utils.h"
+#include "libpath_utils.h"
 #include "flow_manager_interface.h"
 #include "match.h"
 #include "openflow.h"
-#include <stddef.h>
-#include <stdbool.h>
 
 #define FLOW_MANAGER_NAME "flow_manager_test_service"
 
@@ -1358,7 +1358,7 @@ test_flow_entry_group_setup_request_too_short(){
 }
 
 /***********************************
- * test for utils.h
+ * test for libpath_utils.h
  ***********************************/
 
 static void
@@ -1691,17 +1691,6 @@ int main( int argc, char *argv[] ) {
     //unit_test( test_flow_entry_group_setup_request_too_short ),
     //unit_test( test_flow_entry_group_teardown_request_too_short ),
   };
-  /*
-  UNUSED( test_duplicate_subscribe_topology );
-  UNUSED( original_die );
-  UNUSED( original_error );
-  UNUSED( original_warn );
-  UNUSED( mock_die );
-  UNUSED( mock_error );
-  UNUSED( mock_warn );
-  UNUSED( reset_messenger );
-  UNUSED( callback_topology_response );
-  */
 
   UNUSED( test_flow_manager_flow_entry_group_setup_request );
   UNUSED( test_flow_manager_flow_entry_group_teardown_request);

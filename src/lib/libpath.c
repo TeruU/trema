@@ -1,6 +1,4 @@
 /*
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2011 NEC Corporation
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,9 +20,10 @@
 #include <linux/limits.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "libpath.h"
 #include "flow_manager_interface.h"
-#include "utils.h"
+#include "libpath_utils.h"
 
 typedef struct {
   hop public;
@@ -133,7 +132,6 @@ add_path_entry( path_private *path ) {
   insert_hash_entry( path_db.id, &path->id, path );
   insert_hash_entry( path_db.match, path, path );
 
-  //puts("*****************add_path_db finished*************************");
   return true;
 }
 
@@ -232,9 +230,7 @@ create_hop( uint64_t datapath_id, uint16_t in_port, uint16_t out_port, openflow_
 void
 delete_hop( hop *hop ) {
   hop_private *private = ( hop_private * ) hop;
-  //printf("libpath.c : hop %p will be deleted\n", private );
   if ( hop->extra_actions != NULL ) {
-    //printf("libpath.c : actions %p will be deleted\n", hop->extra_actions );
     delete_actions( hop->extra_actions );
   }
   xfree( private );
@@ -272,7 +268,7 @@ append_hop_to_path( path *path, hop *hop ) {
 
 void delete_path( path *path ) {
   path_private *private = ( path_private * ) path;
-  //printf("libpath.c : path %p will be deleted\n", private );
+
   list_element *element = path->hops;
   while ( element != NULL ) {
     delete_hop( element->data );
@@ -459,8 +455,6 @@ setup_path( path *p, setup_handler setup_callback, void *setup_user_data,
 
   temp = NULL;
   path_private *private = ( path_private * ) copy_path( p );
-  //printf("libpath.c 462 : path_private : %p\n", private);
-  //printf("libpath.c 463 : hop : %p\n", private->public.hops->data);
 
   private->id = get_flow_entry_group_id();
   private->setup_callback = setup_callback;
@@ -655,10 +649,3 @@ finalize_path( void ) {
   return true;
 }
 
-
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -17,19 +17,20 @@ are removed from the switches, a requester is notified from flow manager.
 
 Software architecture/hierarchy is as follows:
 
-                +--------------+ +-------------+
-                |     App      | |     App     |
-                +--------------+ +-------------+
-                |    libpath   | | New library |
-                +--------------+ +-------------+
-                       |                |  Flow Manager Interface
-      +-----+   +------------------------------+
-      | App |   |         Flow Manager         |
-      +-----+   +------------------------------+
-         |                      |  OpenFlow Application Interface
+          
+      +-----+
+      | App |
+      +-----+
+         |  OpenFlow Application Interface
       +----------------------------------------+
-      |                  Trema (core)          |
+      |            Trema + libpath             |
       +----------------------------------------+
+         |  Flow Manager Interface
+         |  Messanger service
+      +------------------------------+
+      |           Flow Manager       |
+      +------------------------------+
+
 
 libpath which cooperates with flow manager allows you to set up/tear
 down/look up a path which is a set of flow entries that share the same
@@ -49,29 +50,14 @@ how to use the APIs.
 How to build
 ------------
 
-  Build Trema and slicesable routing switch
+  Build Trema
 
-        $ git clone git://github.com/trema/trema.git trema
-        $ git clone git://github.com/trema/apps.git apps
-        $ cd trema
         $ ./build.rb
-        $ cd ../apps/flow_manager
-
-  Build flow manager, libpath, and examples
-
-        $ make
 
 How to run examples
 -------------------
 
-    $ ./trema run -c ../apps/flow_manager/flow_manager.conf -d
-    $ export TREMA_HOME=`pwd`
-    $ cd ../apps/flow_manager/examples
-    $ ./example1
-    $ ./example2
-    $ ./example3
-    $ ./example4
-    $ ./example5
+    $ ./trema run -c src/examples/flow_manager_example/flow_manager.conf src/examples/flow_manager_example/flow_manager.rb 
 
 All examples show how to setup or teardown paths through libpath.
 

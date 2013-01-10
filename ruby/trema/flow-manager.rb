@@ -1,6 +1,4 @@
 #
-# Author: Yasuhito Takamiya <yasuhito@gmail.com>
-#
 # Copyright (C) 2008-2012 NEC Corporation
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+require "trema/controller"
 
 module Trema
   module FlowManager
@@ -33,7 +32,7 @@ module Trema
     # @param [Integer] status
     #   the datapath ID of disconnected OpenFlow switch.
     #
-	handler flow_manager_setup_reply:
+	handler :flow_manager_setup_reply
 	
 	#
     # @!method flow_manager_teardown_reply( reason, path )
@@ -43,14 +42,27 @@ module Trema
     # @param [Integer] reason
     #   the datapath ID of disconnected OpenFlow switch.
     #
-	handler flow_manager_teardown_reply: 
+	handler :flow_manager_teardown_reply
 	
+    #
+    # @!method start
+    # Initialization before start_trema() call.
+    # This method will be implicitly called inside Controller#run! between init_trema() and start_trema() calls.
+    #
+    def start
+        info "*************************************
+*****Start FlowManagerController*****
+*************************************"
+      Flow_manager.initialize()
+    end
+    
+    #
+    # @overload shutdown!
+    #  Shutdown controller.
+    #
+    def shutdown
+      Flow_manager.finalize()
+      super()
+    end
   end
 end
-
-
-### Local variables:
-### mode: Ruby
-### coding: utf-8-unix
-### indent-tabs-mode: nil
-### End:

@@ -1,6 +1,4 @@
 /*
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2011 NEC Corporation
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,16 +25,9 @@
 
 void dump_hop( const hop *h );
 void dump_path( const path *p );
+void dump_match( const struct ofp_match *match );
 const char *status_to_string( int status );
 const char *reason_to_string( int reason );
 
 
 #endif // UTILS_H
-
-
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

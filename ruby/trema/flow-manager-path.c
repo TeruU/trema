@@ -24,7 +24,7 @@
 #include "libpath.h"
 #include "match.h"
 #include "flow-manager-hop.h"
-#include "utils.h"
+#include "libpath_utils.h"
 
 //#define DEBUG
 #ifdef DEBUG
@@ -51,13 +51,6 @@ typedef struct {
 } hop_private;
 
 VALUE cPath;
-
-static void
-dump_match( const struct ofp_match *match ) {
-  char match_string[ 256 ];
-  match_to_string( match, match_string, sizeof( match_string ) );
-  info( "Match: match = [%s]",match_string);
-}
 
 static VALUE path_priority(VALUE self)
 {
@@ -109,7 +102,7 @@ static VALUE path_match(VALUE self)
     debug("start\n");
     path *p;
     Data_Get_Struct(self, path, p);
-    dump_match(&p->match);
+    debug(dump_match(&p->match));
 
     VALUE obj;
     obj = rb_funcall( cMatch, rb_intern( "new" ), 0 );
@@ -147,7 +140,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
     int nargs = rb_scan_args(argc, argv, "11", &match, &options);
     Data_Get_Struct(match, struct ofp_match, _match );
     p->match = (struct ofp_match)*_match;
-    dump_match(_match);
+    debug(dump_match(_match));
 
     switch(nargs)
     {
