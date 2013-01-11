@@ -28,9 +28,10 @@ class FlowManagerController < Controller
   def flow_manager_setup_reply(status, path)
     info "*** flow_manager_setup_reply" 
     info "status:" + status 
+    Array hops = path.hops
 
-    bool = Flow_manager.teardown(0x1, path)
-
+    priority = 65535
+    bool = Flow_manager.teardown(hops[0].datapath_id, Match.new(:in_port => 1), priority)
     info "teardown bool:" + bool.inspect()
   end
   
@@ -41,6 +42,15 @@ class FlowManagerController < Controller
   
   def switch_ready datapath_id
  	info "***Hello %#x from #{ ARGV[ 0 ] }!" % datapath_id
+  end
+
+  def dump_path path
+    info "path.priority:" + path.priority().inspect
+    info "path.idle_timeout:" + path.idle_timeout().inspect
+    info "path.hard_timeout:" + path.hard_timeout().inspect
+    info "path.match:" + path.match().inspect
+    Array hops = path.hops
+    info "number of hops:" + hops.size().inspect
   end
   
   def test
@@ -53,9 +63,10 @@ class FlowManagerController < Controller
 	
   	match = Match.new(:in_port => 1)
     path = Path.new(match, options={:idle_timeout=>30})
-    
+
     Flow_manager.append_hop_to_path(path, hop)
     Flow_manager.append_hop_to_path(path, hop2)
+    dump_path(path)
     
     Flow_manager.setup(path,self)
 

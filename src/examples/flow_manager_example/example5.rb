@@ -47,38 +47,16 @@ class FlowManagerController < Controller
   
   def test
     match = Match.new()
-
-    #Instantiate some hops which represent swiches.
-    #Hop.new(Integer datapath id, Integer in_port, Integer out_port, Array actions=[])
   	hop = Hop.new(0x1,1,2)
     hop2 = Hop.new(0x2,2,1)
-	
-    #Instantiate a path.
-    #Path.new(Match match, Hash options={:priority, :idle_timeout, :hard_timeout})
     path = Path.new(match, options={:priority=>65535, :idle_timeout=>5, :hard_timeout=>20})
-    
+
     #Set hops to the path.
-    #Flow_manager.sppend_hop_to_path(Path path, Hop hop) 
-    Flow_manager.append_hop_to_path(path, hop)
-    Flow_manager.append_hop_to_path(path, hop2)
+    #Flow_manager.append_hops_to_path(Path path, Array hops) 
+    hops = [hop, hop2]
+    Flow_manager.append_hops_to_path(path, hops)
 
     info("***** Setting up a path *****")
-
-    #You can access properties by following getters.
-    info "path.priority:" + path.priority().inspect
-    info "path.idle_timeout:" + path.idle_timeout().inspect
-    info "path.hard_timeout:" + path.hard_timeout().inspect
-    info "path.match:" + path.match().inspect
-    Array hops = path.hops
-    info "number of hops:" + hops.size().inspect
-    info "Hop0x1 datapath_id:" + hops[0].datapath_id.inspect
-    info "Hop0x1 in_port:" + hops[0].in_port.inspect
-    info "Hop0x1 out_port:" + hops[0].out_port.inspect
-    info "Hop0x2 datapath_id:" + hops[1].datapath_id.inspect
-    info "Hop0x2 in_port:" + hops[1].in_port.inspect
-    info "Hop0x2 out_port:" + hops[1].out_port.inspect
-
-    #Start setup the path to openflow switches.
     Flow_manager.setup(path, self)
 
   end

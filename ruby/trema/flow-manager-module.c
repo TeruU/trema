@@ -96,6 +96,7 @@ static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
     }
 }
 
+/*
 static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_manager_path)
 {
     debug("start\n");
@@ -103,11 +104,34 @@ static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_
     Data_Get_Struct(flow_manager_path, path, p);
     debug(dump_path( p ));
 
-    uint64_t _in_datapath_id = NUM2INT(in_datapath_id);
+    uint64_t _in_datapath_id = NUM2UINT(in_datapath_id);
     struct ofp_match _match = p->match;
     uint16_t _priority = p->priority;
 
     bool ret = teardown_path(_in_datapath_id, _match, _priority );
+    debug("end with %d\n", ret);
+
+    if(ret == 1)
+    {
+            return Qtrue;
+    }
+    else
+    {
+            return Qfalse;
+    }
+}
+*/
+
+static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE match, VALUE priority)
+{
+    debug("start\n");
+    struct ofp_match *_match;
+    Data_Get_Struct(match, struct ofp_match, _match);
+
+    uint64_t _in_datapath_id = NUM2UINT(in_datapath_id);
+    uint16_t _priority = NUM2UINT(priority);
+
+    bool ret = teardown_path(_in_datapath_id, *_match, _priority );
     debug("end with %d\n", ret);
 
     if(ret == 1)
@@ -125,8 +149,8 @@ static VALUE flow_manager_lookup(VALUE self, VALUE datapath_id, VALUE match, VAL
     debug("start\n");
 
     struct ofp_match *_match;
-    uint64_t _datapath_id = NUM2INT(datapath_id);
-    uint16_t _proirity = NUM2INT(priority);
+    uint64_t _datapath_id = NUM2UINT(datapath_id);
+    uint16_t _proirity = NUM2UINT(priority);
     Data_Get_Struct(match, struct ofp_match, _match );
 
     path *p = lookup_path(_datapath_id, *_match, _proirity);
@@ -245,7 +269,7 @@ void Init_flow_manager_module()
     rb_define_module_function(mFlowManager, "append_hops_to_path", flow_manager_append_hops_to_path, 2);
     rb_define_module_function(mFlowManager, "setup", flow_manager_setup, 2);
     rb_define_module_function(mFlowManager, "lookup", flow_manager_lookup, 3);
-    rb_define_module_function(mFlowManager, "teardown", flow_manager_teardown, 2);
+    rb_define_module_function(mFlowManager, "teardown", flow_manager_teardown, 3);
     rb_define_module_function(mFlowManager, "teardown_by_match", flow_manager_teardown_by_match, 1);
     rb_define_module_function(mFlowManager, "finalize", finalize_flow_manager, 0);
 }

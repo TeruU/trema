@@ -21,14 +21,14 @@ Software architecture/hierarchy is as follows:
       +-----+
       | App |
       +-----+
-         |  OpenFlow Application Interface
+         | 
       +----------------------------------------+
-      |            Trema + libpath             |
+      |     libpath(Flow Manager) API          |
       +----------------------------------------+
          |  Flow Manager Interface
          |  Messanger service
       +------------------------------+
-      |           Flow Manager       |
+      |     Flow Manager + Trema     |
       +------------------------------+
 
 
@@ -44,13 +44,13 @@ to libpath.
 How to use
 ----------
 
-Please refer to libpath.h and examples as references for understanding
+Please refer to examples as references for understanding
 how to use the APIs.
 
 How to build
 ------------
 
-  Build Trema
+  Build Trema. This software is included into the Trema.
 
         $ ./build.rb
 

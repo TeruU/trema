@@ -24,17 +24,24 @@ class FlowManagerController < Controller
   
   #This event is called when you recieve the result of setup path.
   def flow_manager_setup_reply(status, path)
-  	info "*****flow_manager_setup_reply*****" 
+    info "*****flow_manager_setup_reply*****" 
     info status
-    dump_path(path)
+    Array hops = path.hops
+
+    #Lookup your path
+    #Flow_manager.lookup(Integer datapath_id, Match match, Integer priority)
+    looked_up_path = Flow_manager.lookup(hops[0].datapath_id, Match.new(:dl_type=>1), 30000);
+    
+    info "***dump looked up path***"
+    dump_path(looked_up_path)
   end
   
   #This event is called when you recieve teardown path.
   def flow_manager_teardown_reply(reason, path)
-  	info "*****flow_manager_teardown_reply*****" 
-  	info reason
+    info "*****flow_manager_teardown_reply*****" 
+    info reason
     dump_path(path)
-  end 
+  end
 
   def dump_path path
     info "path.priority:" + path.priority().inspect
@@ -46,40 +53,23 @@ class FlowManagerController < Controller
   end
   
   def test
-    match = Match.new()
-
-    #Instantiate some hops which represent swiches.
-    #Hop.new(Integer datapath id, Integer in_port, Integer out_port, Array actions=[])
-  	hop = Hop.new(0x1,1,2)
+    hop = Hop.new(0x1,1,2)
     hop2 = Hop.new(0x2,2,1)
-	
-    #Instantiate a path.
-    #Path.new(Match match, Hash options={:priority, :idle_timeout, :hard_timeout})
-    path = Path.new(match, options={:priority=>65535, :idle_timeout=>5, :hard_timeout=>20})
-    
-    #Set hops to the path.
-    #Flow_manager.sppend_hop_to_path(Path path, Hop hop) 
+    match = Match.new(:dl_type=>1)
+    path = Path.new(match, options={:priority=>30000, :idle_timeout=>10, :hard_timeout=>0})
     Flow_manager.append_hop_to_path(path, hop)
     Flow_manager.append_hop_to_path(path, hop2)
-
     info("***** Setting up a path *****")
-
-    #You can access properties by following getters.
-    info "path.priority:" + path.priority().inspect
-    info "path.idle_timeout:" + path.idle_timeout().inspect
-    info "path.hard_timeout:" + path.hard_timeout().inspect
-    info "path.match:" + path.match().inspect
-    Array hops = path.hops
-    info "number of hops:" + hops.size().inspect
-    info "Hop0x1 datapath_id:" + hops[0].datapath_id.inspect
-    info "Hop0x1 in_port:" + hops[0].in_port.inspect
-    info "Hop0x1 out_port:" + hops[0].out_port.inspect
-    info "Hop0x2 datapath_id:" + hops[1].datapath_id.inspect
-    info "Hop0x2 in_port:" + hops[1].in_port.inspect
-    info "Hop0x2 out_port:" + hops[1].out_port.inspect
-
-    #Start setup the path to openflow switches.
     Flow_manager.setup(path, self)
+
+    hop3 = Hop.new(0x1,1,2)
+    hop4 = Hop.new(0x2,2,1)
+    match2 = Match.new(:dl_type=>2)
+    path2 = Path.new(match2, options={:priority=>30000, :idle_timeout=>10, :hard_timeout=>0})
+    Flow_manager.append_hop_to_path(path2, hop3)
+    Flow_manager.append_hop_to_path(path2, hop4)
+    info("***** Setting up a path *****")
+    Flow_manager.setup(path2, self)
 
   end
 end
