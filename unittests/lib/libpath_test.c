@@ -1373,6 +1373,20 @@ test_dump_hop()
 }
 
 static void
+test_dump_hop_with_extra_actions()
+{
+  //This is output method, so please test it by manual.
+  openflow_actions *actions = create_actions();
+  append_action_output( actions, 1, UINT16_MAX );
+
+  hop *h = create_hop(0x1, 1, 2, actions);
+  dump_hop(h);
+
+  delete_actions(actions);
+  delete_hop(h);
+}
+
+static void
 test_dump_path()
 {
   ///This is output method, so please test it by manual.
@@ -1385,9 +1399,23 @@ test_dump_path()
   uint16_t idle_timeout = 10;
   uint16_t hard_timeout = 20;
   path *p = create_path( match, priority, idle_timeout, hard_timeout );
-  dump_path(p);
 
+  hop *h1 = create_hop( 0x1, 1, 2, NULL);
+  append_hop_to_path( p, h1 );
+
+  dump_path(p);
   delete_path(p);
+}
+
+static void
+test_dump_match()
+{
+  ///This is output method, so please test it by manual.
+  struct ofp_match match;
+  memset( &match, 0, sizeof( struct ofp_match ) );
+  match.wildcards = OFPFW_ALL;
+
+  dump_match(&match);
 }
 
 static void
@@ -1654,7 +1682,9 @@ int main( int argc, char *argv[] ) {
     unit_test( test_reason_to_string ),
     unit_test( test_get_flow_entry_group_id ),
     unit_test( test_dump_hop ),
+    unit_test( test_dump_hop_with_extra_actions ),
     unit_test( test_dump_path ),
+    unit_test( test_dump_match ),
     unit_test( test_init_and_finalize_path ),
     unit_test( test_create_hop_with_actions ),
     unit_test( test_create_hop_without_actions ),
