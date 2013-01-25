@@ -10,13 +10,8 @@ Feature: flow_manager2 tests
     vswitch("switch1ForFM") { datapath_id "0x1" }
     vswitch("switch2ForFM") { datapath_id "0x2" }
     
-    vhost("host1") { ip "192.168.0.1" }
-    vhost("host2") { ip "192.168.0.2" }
-    
-    link switch1ForFM, switch2ForFM
-    link host1, switch1ForFM
-    link host2, switch2ForFM
-    
+    link 0x1,0x2
+
     run {
       path "../../objects/flow_manager/flow_manager"
     }
@@ -37,13 +32,11 @@ Feature: flow_manager2 tests
     
     event :port_status => "flow_manager_test", :packet_in => "flow_manager_test", :state_notify => "flow_manager_test"
     """
-  @slow_process 
   Scenario: Run "flow_manager" C example
     Given I run `trema run -c cflow_manager.conf ../../objects/examples/flow_manager_example/flow_manager_example -d`
     And *** sleep 15 ***
     Then the file "../../tmp/log/flow_manager_example.log" should contain " *** Path setup completed ( status = succeeded, user_data = (nil) )"
     
-  @slow_process 
   Scenario: Run "flow_manager path setup test" Ruby example
     Given I run `trema run ../../src/flow_manager/flow_manager_test/flow_manager_path_setup_test.rb -c flow_manager.conf -d`
     And *** sleep 15 ***
@@ -51,12 +44,11 @@ Feature: flow_manager2 tests
     Then the file "../../tmp/log/FlowManagerController.log" should contain "path.priority:65535"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "path.idle:5"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "path.hard_timeout:30"
-    Then the file "../../tmp/log/FlowManagerController.log" should contain "path.match:wildcards = 0x3820fe(dl_src|dl_dst|dl_type|dl_vlan|dl_vlan_pcp|nw_proto|nw_tos|nw_src(32)|nw_dst(32)|tp_src|tp_dst), in_port = 1, dl_src = 00:00:00:00:00:00, dl_dst = 00:00:00:00:00:00, dl_vlan = 0, dl_vlan_pcp = 0, dl_type = 0, nw_tos = 0, nw_proto = 0, nw_src = 0.0.0.0/0, nw_dst = 0.0.0.0/0, tp_src = 0, tp_dst = 0"
+    Then the file "../../tmp/log/FlowManagerController.log" should contain "path.match:wildcards = 0x3820ff(all), in_port = 0, dl_src = 00:00:00:00:00:00, dl_dst = 00:00:00:00:00:00, dl_vlan = 0, dl_vlan_pcp = 0, dl_type = 0, nw_tos = 0, nw_proto = 0, nw_src = 0.0.0.0/0, nw_dst = 0.0.0.0/0, tp_src = 0, tp_dst = 0"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[0].datapath_id:1"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[0].in_port:1"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[0].out_port:2"
-    Then the file "../../tmp/log/FlowManagerController.log" should contain "arrAction1[1].max_len():65535"
-    Then the file "../../tmp/log/FlowManagerController.log" should contain "arrAction1[1].port_number():1"
+    Then the file "../../tmp/log/FlowManagerController.log" should contain "arrAction1[0].port_number():1"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[1].datapath_id:2"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[1].in_port:2"
     Then the file "../../tmp/log/FlowManagerController.log" should contain "arrHops[1].out_port:3"

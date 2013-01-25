@@ -59,7 +59,7 @@ class FlowManagerController < Controller
     Array actions = [SendOutPort.new(1)]
   	hop = Hop.new(0x1,1,2)
   	match = Match.new()
-    path = Path.new(match, options={:idle_timeout=>100, :hard_timeout=>100})
+    path = Path.new(match, options={:idle_timeout=>5, :hard_timeout=>30})
     
     path << hop
 

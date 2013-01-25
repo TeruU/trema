@@ -184,8 +184,14 @@ static VALUE path_append_hop(VALUE self, VALUE rhop)
 {
 	debug("start\n");
 
+	if ( rb_funcall( rhop, rb_intern( "is_a?" ), 1, cHop ) == Qfalse )
+	{
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
+	}
+
     path *p;
     hop *h;
+
     Data_Get_Struct(self, path, p);
     Data_Get_Struct(rhop, hop, h);
 
@@ -220,7 +226,7 @@ static VALUE path_append_hops(VALUE self, VALUE rhops)
           break;
         default:
           debug("start7\n");
-          rb_raise( rb_eTypeError, "hops argument must be an Array" );
+          rb_raise( rb_eTypeError, "Argument should be an Array" );
           break;
       }
     }

@@ -31,6 +31,7 @@ class FlowManagerController < Controller
     info "arrHops[0].in_port:" + arrHops[0].in_port().inspect
     info "arrHops[0].out_port:" + arrHops[0].out_port().inspect
     arrAction1 = arrHops[0].actions()
+    info "arrAction1[0].port_number():" + arrAction1[0].port_number().inspect
     info "arrHops[1].datapath_id:" + arrHops[1].datapath_id().inspect
     info "arrHops[1].in_port:" + arrHops[1].in_port().inspect
     info "arrHops[1].out_port:" + arrHops[1].out_port().inspect
@@ -46,10 +47,11 @@ class FlowManagerController < Controller
   end
   
   def test
-  
-  	hop = Hop.new(0x1,1,2)
+    Array actions = [SendOutPort.new(1)]
+  	hop = Hop.new(0x1,1,2,actions)
+    hop2 = Hop.new(0x2,2,3)
   	match = Match.new()
-    path = Path.new(match, options={:idle_timeout=>30, :hard_timeout=>30})
+    path = Path.new(match, options={:idle_timeout=>5, :hard_timeout=>30})
 
     path << hop
     path.append_hop(hop2)

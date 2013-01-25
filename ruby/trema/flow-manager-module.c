@@ -197,6 +197,11 @@ static VALUE flow_manager_setup(VALUE self, VALUE r_path, VALUE controller)
     debug("start\n");
     UNUSED( self );
 
+	if ( rb_funcall( r_path, rb_intern( "is_a?" ), 1, cPath ) == Qfalse )
+	{
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
+	}
+
     path *p;
     Data_Get_Struct(r_path, path, p);
     debug("path pointer : %p\n", p);
@@ -219,6 +224,15 @@ static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE rpath, VALUE rhop
     debug("start\n");
     UNUSED( self );
 
+	if ( rb_funcall( rhop, rb_intern( "is_a?" ), 1, cHop ) == Qfalse )
+	{
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
+	}
+	if ( rb_funcall( rpath, rb_intern( "is_a?" ), 1, cPath ) == Qfalse )
+	{
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
+	}
+
     path *p;
     hop *h;
     Data_Get_Struct(rpath, path, p);
@@ -235,6 +249,11 @@ static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rho
 {
     debug("start\n");
     UNUSED( self );
+
+	if ( rb_funcall( rpath, rb_intern( "is_a?" ), 1, cPath ) == Qfalse )
+	{
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
+	}
 
     path *p;
     //hop *h;
@@ -257,7 +276,7 @@ static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rho
           break;
         default:
           debug("start7\n");
-          rb_raise( rb_eTypeError, "hops argument must be an Array" );
+          rb_raise( rb_eTypeError, "Argument should be an Array" );
           break;
       }
     }

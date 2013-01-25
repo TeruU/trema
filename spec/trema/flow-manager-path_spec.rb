@@ -67,7 +67,7 @@ describe Hop, ".new" do
     @path.append_hop(hop2)
     @path2 = Path.new(match2, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
   end
-
+  
   it "single argument" do
     match = Match.new()
     Path.new(match).instance_of?(Path).should == true
@@ -115,7 +115,15 @@ describe Hop, ".new" do
 
   end
 
+  it "append_mal_hop" do
+    expect {@path << 1}.to raise_error() 
+  end
 
+  it "append_mal_hop" do
+    match = Match.new()
+    path = Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
+    expect {path << match}.to raise_error("Argument should be Hop class") 
+  end
 
   it "priority" do
 

@@ -166,6 +166,11 @@ describe Hop, ".new" do
   it "append_hop_to_path with array" do
     expect {Flow_manager.append_hop_to_path(@path,@arrayhops)}.to raise_error
   end
+
+  it "append_hop_to_path with mal argument" do
+    match = Match.new()
+    expect {Flow_manager.append_hop_to_path(@path,match)}.to raise_error(TypeError)
+  end
 	
   after do
     puts "after do each"
