@@ -50,22 +50,22 @@ describe Hop, "test" do
     @hop3 = Hop.new(datapath_id3, in_port3, out_port3, action)
   end
 
-  it "no argument" do
+  it "new with no argument" do
     expect {Hop.new()}.to raise_error()
   end 
 
-  it "3 arguments" do
+  it "new with 3 arguments" do
     tempHop = Hop.new(0x1, 1, 2)
     tempHop.instance_of?(Hop).should == true
   end
 
-  it "4 arugments with single actions" do
+  it "new with 4 arugments with single actions" do
       action = SendOutPort.new(:port_number => 1, :max_len => 256)
       tempHop = Hop.new(0x1, 1, 2, action)
       tempHop.instance_of?(Hop).should == true
   end
 
-  it "4 arugments with multiple actions" do
+  it "new with 4 arugments with multiple actions" do
       Array actions = Array.new([SendOutPort.new(:port_number => 1, :max_len => 256), 
                 SetEthSrcAddr.new("11:22:33:44:55:66"),
                 SetEthDstAddr.new("11:22:33:44:55:66"),
@@ -82,12 +82,12 @@ describe Hop, "test" do
       tempHop.instance_of?(Hop).should == true
   end
 
-  it "4 arguments with strange action" do
+  it "new with 4 arguments with strange action" do
       action = Match.new()
       expect {Hop.new(0x1, 1, 2, action)}.to raise_error() 
   end
 
-  it "4 arguments with a bad action array" do
+  it "new with 4 arguments with a bad action array" do
         datapath_id = 0x4;
         in_port = 2;
         out_port = 1;
@@ -97,7 +97,7 @@ describe Hop, "test" do
         expect {Hop.new(datapath_id, in_port, out_port, actions)}.to raise_error("actions argument must be an Array of Action objects")
   end
 
-  it "4 arguments with a differenct object" do
+  it "new with 4 arguments with a differenct object" do
         datapath_id = 0x4;
         in_port = 2;
         out_port = 1;
@@ -106,26 +106,26 @@ describe Hop, "test" do
   end
 
 
-  it "3 arguments with zeros" do
+  it "new with 3 arguments with zeros" do
         hop = Hop.new(0x0, 0, 0)
         hop.datapath_id.should == 0
         hop.in_port.should == 0
         hop.out_port.should == 0
   end
 
-  it "3 arguments with big value" do
+  it "new with 3 arguments with big value" do
         expect {hop = Hop.new(1000000000000000000000000000000000000000000000000000, 1, 1)}.to raise_error()
   end
 
-  it "3 arguments with minus value" do
-        expect {hop = Hop.new(-1, -1, -1)}.to raise_error()
+  it "new with 3 arguments with minus datapath_id" do
+        expect {hop = Hop.new(-1, 1, 1)}.to raise_error()
   end
 
-  it "3 arguments with minus value" do
+  it "new with 3 arguments with minus in_port value" do
         expect {hop = Hop.new(1, -1, 1)}.to raise_error()
   end
 
-  it "3 arguments with minus value" do
+  it "new with 3 arguments with minus out_port value" do
         expect {hop = Hop.new(1, 1, -1)}.to raise_error()
   end
 

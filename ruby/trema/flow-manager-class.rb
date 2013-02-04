@@ -14,32 +14,33 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+require "trema/executables"
+require "singleton"
+
+module Trema
+  class FlowManagerClass    
+    include Singleton
+
+    def FlowManagerClass.down
+      lambda{
+        pid_file = Trema.pid+"/flow_manager.pid"
+        if File.exist?(pid_file)
+          name = "flow_manager"
+          Trema::Process.read( pid_file, name ).kill!
+        end
+      }
+    end
+
+    def initialize
+      pid_file = Trema.pid+"/flow_manager.pid"
+      unless File.exist?(pid_file)
+        sh "#{ Trema::Executables.flow_manager } --daemonize"
+        ObjectSpace.define_finalizer(self, FlowManagerClass.down)
+      else
+        raise "flow_manager is already runnning"
+      end
+    end
 
 
-Before do
-  @aruba_timeout_seconds = 5
-  run "trema killall"
-  sleep 5
+  end
 end
-
-
-Before( "@slow_process" ) do
-  @aruba_io_wait_seconds = 1
-end
-
-Before( "@long_timeout") do
-  @aruba_timeout_seconds = 30
-  sleep 5
-end
-
-After do
-  run "trema killall"
-  sleep 1
-end
-
-
-### Local variables:
-### mode: Ruby
-### coding: utf-8-unix
-### indent-tabs-mode: nil
-### End:

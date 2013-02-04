@@ -20,16 +20,12 @@ class FlowManagerController < Controller
   include Trema::FlowManager
   oneshot_timer_event(:test, 5)
   
-  
   def flow_manager_setup_reply(status, path)
-  	info "***flow_manager_setup_reply***" 
-  	info status
-    path.teardown  	
+    info "*** flow_manager_setup_reply" 
   end
   
   def flow_manager_teardown_reply(reason, path)
-  	info "***flow_manager_teardown_reply***" 
-  	info reason
+  	info "***flow_manager_teardown_reply" 
     self.shutdown!
   end 
   
@@ -38,18 +34,23 @@ class FlowManagerController < Controller
   end
   
   def test
-  
-    Array actions = [StripVlanHeader.new, SendOutPort.new(1)]
-  	hop = Hop.new(0x1,1,2, actions)
-	  Array actions2 = [StripVlanHeader.new, SendOutPort.new(2)]
-  	hop2 = Hop.new(0x2,2,3, actions2)
-  	match = Match.new(:in_port => 1)
-    path = Path.new(match, options={:idle_timeout=>5})
-    path2 = Path.new(match, options={:idle_timeout=>6})
-    Flow_manager.append_hop_to_path(path,hop);
+
+    info Flow_manager.initialize().to_s
+    info Flow_manager.initialize().to_s
+    info Flow_manager.initialize().to_s
+
+    Array actions = [SendOutPort.new(1)]
+  	hop = Hop.new(0x1,1,2,actions)
+    hop2 = Hop.new(0x2,2,3)
+  	match = Match.new()
+    path = Path.new(match, options={:idle_timeout=>5, :hard_timeout=>30})
+
+    path << hop
+    path.append_hop(hop2)
+
     path.setup(self)
 
-    info "***exit switch ready FlowManagerController***"
+    info "***exit switch ready FlowManagerController"
   end
 end
 

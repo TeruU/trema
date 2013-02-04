@@ -24,6 +24,7 @@
 #include "path.h"
 #include "flow_manager_interface.h"
 #include "path_utils.h"
+#include "trema.h"
 
 typedef struct {
   hop public;
@@ -632,8 +633,6 @@ handle_reply( uint16_t tag, void *data, size_t length, void *user_data ) {
 bool
 init_path( void ) {
 
-  //system("./trema run objects/flow_manager/flow_manager -d");
-
   create_path_db();
   set_service_name();
   add_message_received_callback( get_service_name(), handle_notification );
@@ -668,12 +667,9 @@ stop_flow_manager()
 bool
 finalize_path( void ) {
 
-  //stop_flow_manager();
   UNUSED(stop_flow_manager);
-
   delete_path_db();
   delete_message_received_callback( get_service_name(), handle_notification );
   delete_message_replied_callback( get_service_name(), handle_reply );
-
   return true;
 }

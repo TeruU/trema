@@ -52,8 +52,12 @@ typedef struct {
   void *r_extra_actions_pointer;
 } hop_private;
 
-int isInit = FALSE;
-VALUE mFlowManager;
+struct flow_manager_class
+{
+	int isInit;
+};
+
+VALUE cFlowManager;
 
 static VALUE init_flow_manager(VALUE self);
 
@@ -67,8 +71,10 @@ handle_setup( int status, const path *p, void *controller ) {
   #pragma GCC diagnostic pop
   debug("path pointer : %p\n", p);
 
+  info("status:%s", status_to_string( status ));
   if(status != 0)
   {
+	  info("flow-manager-module : 68");
 	  rb_raise(rb_eException, "Error occured : %s", status_to_string( status ) );
   }
 
@@ -90,6 +96,7 @@ handle_teardown( int reason, const path *p, void *controller ) {
   if ( rb_respond_to( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ) ) == Qtrue ) {
     rb_funcall( ( VALUE ) controller, rb_intern( "flow_manager_teardown_reply" ), 2, rb_str_new2(reason_to_string( reason )), obj);
   }
+  //stop_trema();
 }
 
 static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
@@ -114,6 +121,32 @@ static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
             return Qfalse;
     }
 }
+
+/*
+static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE flow_manager_path)
+{
+    debug("start\n");
+    path *p;
+    Data_Get_Struct(flow_manager_path, path, p);
+    debug(dump_path( p ));
+
+    uint64_t _in_datapath_id = NUM2UINT(in_datapath_id);
+    struct ofp_match _match = p->match;
+    uint16_t _priority = p->priority;
+
+    bool ret = teardown_path(_in_datapath_id, _match, _priority );
+    debug("end with %d\n", ret);
+
+    if(ret == 1)
+    {
+            return Qtrue;
+    }
+    else
+    {
+            return Qfalse;
+    }
+}
+*/
 
 static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE match, VALUE priority)
 {
@@ -212,7 +245,7 @@ static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE rpath, VALUE rhop
 	}
 	if ( rb_funcall( rpath, rb_intern( "is_a?" ), 1, cPath ) == Qfalse )
 	{
-        rb_raise( rb_eTypeError, "Argument should be Path class");
+        rb_raise( rb_eTypeError, "Argument should be Hop class");
 	}
 
     path *p;
@@ -267,20 +300,26 @@ static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rho
     return Qnil;
 }
 
+
+
+
 static VALUE init_flow_manager(VALUE self)
 {
 	debug("start\n");
-	debug("isInit : %d\n",isInit);
+
+	struct flow_manager_class *fm;
+	Data_Get_Struct(self, struct flow_manager_class, fm);
+
+
 	UNUSED( self );
-	if(isInit == FALSE)
+	if(fm->isInit == FALSE)
 	{
 		init_path();
-		isInit = TRUE;
-		debug("end with true\n");
-	    return Qtrue;
+		fm->isInit = TRUE;
+		debug("isInit : %d\n",fm->isInit);
 	}
-	debug("end with false\n");
-    return Qfalse;
+	debug("end\n");
+    return Qnil;
 }
 
 static VALUE finalize_flow_manager(VALUE self)
@@ -293,17 +332,33 @@ static VALUE finalize_flow_manager(VALUE self)
   return Qnil;
 }
 
-void Init_flow_manager_module()
+static VALUE create_flow_manager_class(VALUE klass)
 {
-    mFlowManager = rb_define_module("Flow_manager");
-    rb_define_module_function(mFlowManager, "initialize", init_flow_manager, 0);
-    rb_define_module_function(mFlowManager, "finalize", finalize_flow_manager, 0);
-    rb_define_module_function(mFlowManager, "lookup", flow_manager_lookup, 3);
-    rb_define_module_function(mFlowManager, "teardown_by_match", flow_manager_teardown_by_match, 1);
-    rb_define_module_function(mFlowManager, "append_hop_to_path", flow_manager_append_hop_to_path, 2);
-    rb_define_module_function(mFlowManager, "append_hops_to_path", flow_manager_append_hops_to_path, 2);
-    rb_define_module_function(mFlowManager, "setup", flow_manager_setup, 2);
-    rb_define_module_function(mFlowManager, "teardown", flow_manager_teardown, 3);
+    debug("start\n");
+    struct flow_manager_class *fm = ALLOC( struct flow_manager_class );
+    memset( fm, 0, sizeof( struct flow_manager_class ) );
+
+    //default value
+    fm->isInit = TRUE;
+    VALUE rFlowManagerClass = Data_Wrap_Struct(klass, 0, finalize_flow_manager, fm);
+
+    debug("end\n");
+
+    return rFlowManagerClass;
+}
+
+void Init_flow_manager_class()
+{
+	cFlowManager = rb_define_class("Flow_manager_class", rb_cObject);
+	rb_define_alloc_func(cFlowManager, create_flow_manager_class);
+	rb_define_method(cFlowManager, "init", init_flow_manager, 0);
+	rb_define_method(cFlowManager, "finalize", finalize_flow_manager, 0);
+	rb_define_method(cFlowManager, "lookup", flow_manager_lookup, 3);
+	rb_define_method(cFlowManager, "teardown_by_match", flow_manager_teardown_by_match, 1);
+	rb_define_method(cFlowManager, "append_hop_to_path", flow_manager_append_hop_to_path, 2);
+	rb_define_method(cFlowManager, "append_hops_to_path", flow_manager_append_hops_to_path, 2);
+	rb_define_method(cFlowManager, "setup", flow_manager_setup, 2);
+	rb_define_method(cFlowManager, "teardown", flow_manager_teardown, 3);
 }
 
 

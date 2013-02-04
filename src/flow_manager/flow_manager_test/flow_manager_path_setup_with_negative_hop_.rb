@@ -41,7 +41,8 @@ class FlowManagerController < Controller
   end
   
   def flow_manager_teardown_reply(reason, path)
-  	info "*** start flow_manager_teardown_reply" 
+  	info "*** start flow_manager_teardown_reply"
+    self.shutdown!
   end 
   
   def switch_ready datapath_id

@@ -16,6 +16,7 @@
 #
 
 require "trema/controller"
+require "trema/executables"
 
 module Trema
   module FlowManager
@@ -32,9 +33,9 @@ module Trema
     # @param [Integer] status
     #   the datapath ID of disconnected OpenFlow switch.
     #
-	handler :flow_manager_setup_reply
+	  handler :flow_manager_setup_reply
 	
-	#
+	  #
     # @!method flow_manager_teardown_reply( reason, path )
     #
     # @abstract Override this to implement a custom handler.
@@ -42,7 +43,16 @@ module Trema
     # @param [Integer] reason
     #   the datapath ID of disconnected OpenFlow switch.
     #
-	handler :flow_manager_teardown_reply
+	  handler :flow_manager_teardown_reply
+
+    def run_flow_manager
+      pid_file = Trema.pid+"/flow_manager.pid"
+      unless File.exist?(pid_file)
+        sh "#{ Trema::Executables.flow_manager } --daemonize"
+      else
+        raise "flow_manager is already runnning"
+      end
+    end
 	
     #
     # @!method start
@@ -50,19 +60,17 @@ module Trema
     # This method will be implicitly called inside Controller#run! between init_trema() and start_trema() calls.
     #
     def start
-        info "*************************************
-*****Start FlowManagerController*****
-*************************************"
-      Flow_manager.initialize()
+      #run_flow_manager
+      #Flow_manager.initialize() 
     end
     
     #
     # @overload shutdown!
     #  Shutdown controller.
     #
-    def shutdown
+    def shutdown!     
       Flow_manager.finalize()
-      super()
+      super
     end
   end
 end

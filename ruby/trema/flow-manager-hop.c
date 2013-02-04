@@ -73,6 +73,7 @@ static void form_actions( VALUE raction, openflow_actions *actions )
   debug("end\n");
 }
 
+//Expect the arguments are checked on Ruby Action Class side
 static void flow_manager_append_action( openflow_actions *actions, VALUE action ) {
   if ( rb_funcall( action, rb_intern( "is_a?" ), 1, rb_path2class( "Trema::Enqueue" ) ) == Qtrue ) {
     uint32_t queue_id = ( uint32_t ) NUM2UINT( rb_funcall( action, rb_intern( "queue_id" ), 0 ) );
@@ -180,7 +181,7 @@ static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
         VALUE actions;
         int nargs = rb_scan_args(argc, argv, "31", &datapath_id, &in_port, &out_port, &actions);
 
-        if(NUM2INT(datapath_id)<0 || NUM2INT(in_port)<0 || NUM2INT(out_port)<0)
+        if(NUM2LONG(datapath_id)<0 || NUM2INT(in_port)<0 || NUM2INT(out_port)<0)
         {
           rb_raise( rb_eRangeError, "Please input positive integer." );
         }
@@ -192,8 +193,8 @@ static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
                 case 3:
                 {
                   hp->public.datapath_id = (uint64_t)NUM2UINT(datapath_id);
-                  hp->public.in_port = (uint16_t)NUM2UINT(in_port);
-                  hp->public.out_port = (uint16_t)NUM2UINT(out_port);
+                  hp->public.in_port = (uint16_t)NUM2INT(in_port);
+                  hp->public.out_port = (uint16_t)NUM2INT(out_port);
                   hp->public.extra_actions = NULL;
 
                   break;
@@ -201,8 +202,8 @@ static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
                 case 4:
                 {
                   hp->public.datapath_id = (uint64_t)NUM2UINT(datapath_id);
-                  hp->public.in_port = (uint16_t)NUM2UINT(in_port);
-                  hp->public.out_port = (uint16_t)NUM2UINT(out_port);
+                  hp->public.in_port = (uint16_t)NUM2INT(in_port);
+                  hp->public.out_port = (uint16_t)NUM2INT(out_port);
                   hp->public.extra_actions = NULL;
 
                   _actions = create_actions();

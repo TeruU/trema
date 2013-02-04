@@ -19,8 +19,8 @@ require File.join( File.dirname( __FILE__ ), "..", "spec_helper" )
 require "trema"
 
 describe Hop, ".new" do
+
   before do
-    puts "before do each"
     datapath_id = 0x1;
     in_port = 1;
     out_port = 2;
@@ -109,7 +109,11 @@ describe Hop, ".new" do
     
 
   it "append_hops_to_path with single hop" do
-    expect {Flow_manager.append_hops_to_path(@path,@hop)}.to raise_error
+    expect {Flow_manager.append_hops_to_path(@path,@hop)}.to raise_error(TypeError)
+  end
+
+  it "append_hops_to_path with mal second argument" do
+    expect {Flow_manager.append_hops_to_path(@path,@path)}.to raise_error(TypeError)
   end
 
   it "append_hop_to_path with 1 hop" do
@@ -167,9 +171,14 @@ describe Hop, ".new" do
     expect {Flow_manager.append_hop_to_path(@path,@arrayhops)}.to raise_error
   end
 
-  it "append_hop_to_path with mal argument" do
+  it "append_hop_to_path with mal second argument" do
     match = Match.new()
     expect {Flow_manager.append_hop_to_path(@path,match)}.to raise_error(TypeError)
+  end
+
+  it "append_hop_to_path with mal first argument" do
+    match = Match.new()
+    expect {Flow_manager.append_hop_to_path(match,@hop2)}.to raise_error(TypeError)
   end
 	
   after do

@@ -25,7 +25,7 @@ describe Hop, ".new" do
     datapath_id = 0x1;
     in_port = 1;
     out_port = 2;
-    hop = Hop.new(datapath_id, in_port, out_port)
+    @hop = Hop.new(datapath_id, in_port, out_port)
 
     datapath_id2 = 0x2;
     in_port2 = 2;
@@ -42,7 +42,7 @@ describe Hop, ".new" do
                       SetVlanPriority.new( 7 ),
                       StripVlanHeader.new,
                       VendorAction.new( 0x00004cff, Array["test", "test2"] ) ] )
-    hop2 = Hop.new(datapath_id2, in_port2, out_port2, actions2)
+    @hop2 = Hop.new(datapath_id2, in_port2, out_port2, actions2)
 
     match = Match.new()
     match2 = Match.new(
@@ -61,11 +61,10 @@ describe Hop, ".new" do
     )
 
     @path = Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
-    #Flow_manager.append_hop_to_path(@path,hop)
-    #Flow_manager.append_hop_to_path(@path,hop2)
-    @path << hop
-    @path.append_hop(hop2)
-    @path2 = Path.new(match2, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
+    @path2 = Path.new(match2, options ={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535})
+    @arrayhops = Array.new()
+    @arrayhops.push(@hop)
+    @arrayhops.push(@hop2)
   end
   
   it "single argument" do
@@ -83,19 +82,19 @@ describe Hop, ".new" do
     expect {Path.new(match, options={:idle_timeout=>5, :hard_timeout=>5, :priority=>65535}, 1)}.to raise_error() 
   end
 
-  it "minus arguments" do
+  it "idle_timeout minus arguments" do
     match = Match.new()
     expect {Path.new(match, options={:idle_timeout=>-1, :hard_timeout=>5, :priority=>65535})}.to raise_error() 
   end
 
-  it "minus arguments" do
+  it "hard_timeout minus arguments" do
     match = Match.new()
-    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>-5, :priority=>65535})}.to raise_error() 
+    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>-1, :priority=>65535})}.to raise_error() 
   end
 
-  it "minus arguments" do
+  it "priority minus arguments" do
     match = Match.new()
-    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>5, :priority=>-65535})}.to raise_error() 
+    expect {Path.new(match, options={:idle_timeout=>1, :hard_timeout=>5, :priority=>-1})}.to raise_error() 
   end
 
   it "bad arguments" do
@@ -104,6 +103,9 @@ describe Hop, ".new" do
   end
 
   it "hops" do
+    @path << @hop
+    @path.append_hop(@hop2)
+
     hopArray = @path.hops
     hopArray[0].datapath_id.should == 0x1
     hopArray[0].in_port.should == 1
@@ -132,9 +134,6 @@ describe Hop, ".new" do
 
   end
 
-
-
-
   it "hard_timeout" do
 
     @path.hard_timeout.should == 5
@@ -143,16 +142,12 @@ describe Hop, ".new" do
   end
 
 
-
-
   it "idle_timeout" do
 
     @path.idle_timeout.should == 5
     @path2.idle_timeout.should == 5
 
   end
-
-
 
   it "p_match" do
 
@@ -179,9 +174,174 @@ describe Hop, ".new" do
 
   end
 
+  it "path_append_hops" do
+
+    @path.append_hops(@arrayhops)
+
+    hops = @path.hops
+    hops[0].datapath_id.should == 0x1
+    hops[0].in_port.should == 1
+    hops[0].out_port.should == 2
+
+    hops[1].datapath_id.should == 0x2
+    hops[1].in_port.should == 2
+    hops[1].out_port.should == 1
+    actions = hops[1].actions
+
+    actions[1] === SetEthSrcAddr
+    actions[1].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[2] === SetEthDstAddr
+    actions[2].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[3] === SetIpSrcAddr
+    actions[3].ip_address.to_s.should == "192.168.1.1"
+    actions[4] === SetIpDstAddr
+    actions[4].ip_address.to_s.should == "192.168.1.1"
+    actions[5] === SetIpTos
+    actions[5].type_of_service.should == 32
+    actions[6] === SetTransportSrcPort
+    actions[6].port_number.should == 5555
+    actions[7] === SetTransportDstPort
+    actions[7].port_number.should == 5555
+    actions[8] === ActionSetVlanVid
+    actions[8].vlan_id.should == 1
+    actions[9] === SetVlanPriority
+    actions[9].vlan_priority.should == 7
+    actions[10] === StripVlanHeader
+    actions[11] === VendorAction
+    actions[11].vendor_id.should == 0x00004cff
+    Array body = actions[11].body
+    body[0].should == "test"
+    body[1].should == "test2"
+  end
+
+  it "path_append_hops with 2 arguments" do
+    expect {@path.append_hops(@hop, @hop2)}.to raise_error(ArgumentError)
+  end
+
+  it "path_append_hops with single hop" do
+    expect {@path.append_hops(@hop)}.to raise_error(TypeError)
+  end
+
+  it "path_append_hops with mal second argument" do
+    expect {@path.append_hops(@path)}.to raise_error(TypeError)
+  end
+
+  it "append_hop_to_path with 1 hop" do
+    @path.append_hop(@hop)
+    hops = @path.hops
+
+    hops[0].datapath_id.should == 0x1
+    hops[0].in_port.should == 1
+    hops[0].out_port.should == 2
+  end
+
+  it "append_hop_to_path with 2 hops" do
+    @path.append_hop(@hop)
+    @path.append_hop(@hop2)
+
+    hops = @path.hops
+    hops[0].datapath_id.should == 0x1
+    hops[0].in_port.should == 1
+    hops[0].out_port.should == 2
+
+    hops[1].datapath_id.should == 0x2
+    hops[1].in_port.should == 2
+    hops[1].out_port.should == 1
+    actions = hops[1].actions
+
+    actions[1] === SetEthSrcAddr
+    actions[1].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[2] === SetEthDstAddr
+    actions[2].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[3] === SetIpSrcAddr
+    actions[3].ip_address.to_s.should == "192.168.1.1"
+    actions[4] === SetIpDstAddr
+    actions[4].ip_address.to_s.should == "192.168.1.1"
+    actions[5] === SetIpTos
+    actions[5].type_of_service.should == 32
+    actions[6] === SetTransportSrcPort
+    actions[6].port_number.should == 5555
+    actions[7] === SetTransportDstPort
+    actions[7].port_number.should == 5555
+    actions[8] === ActionSetVlanVid
+    actions[8].vlan_id.should == 1
+    actions[9] === SetVlanPriority
+    actions[9].vlan_priority.should == 7
+    actions[10] === StripVlanHeader
+    actions[11] === VendorAction
+    actions[11].vendor_id.should == 0x00004cff
+    Array body = actions[11].body
+    body[0].should == "test"
+    body[1] .should == "test2"
+  end
+
+  it "append_hop_to_path with 2 arguments" do
+    expect {@path.append_hop(@hop, @hop2)}.to raise_error(ArgumentError)
+  end
+
+  it "append_hop_to_path with array" do
+    expect {@path.append_hop(@arrayhops)}.to raise_error(TypeError)
+  end
+
+  it "append_hop_to_path with mal argument" do
+    match = Match.new()
+    expect {@path.append_hop(match)}.to raise_error(TypeError)
+  end
+
+  it "<< with 2 hops" do
+    @path << @hop 
+    @path << @hop2
+
+    hops = @path.hops
+    hops[0].datapath_id.should == 0x1
+    hops[0].in_port.should == 1
+    hops[0].out_port.should == 2
+
+    hops[1].datapath_id.should == 0x2
+    hops[1].in_port.should == 2
+    hops[1].out_port.should == 1
+    actions = hops[1].actions
+
+    actions[1] === SetEthSrcAddr
+    actions[1].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[2] === SetEthDstAddr
+    actions[2].mac_address.to_s.should == "11:22:33:44:55:66"
+    actions[3] === SetIpSrcAddr
+    actions[3].ip_address.to_s.should == "192.168.1.1"
+    actions[4] === SetIpDstAddr
+    actions[4].ip_address.to_s.should == "192.168.1.1"
+    actions[5] === SetIpTos
+    actions[5].type_of_service.should == 32
+    actions[6] === SetTransportSrcPort
+    actions[6].port_number.should == 5555
+    actions[7] === SetTransportDstPort
+    actions[7].port_number.should == 5555
+    actions[8] === ActionSetVlanVid
+    actions[8].vlan_id.should == 1
+    actions[9] === SetVlanPriority
+    actions[9].vlan_priority.should == 7
+    actions[10] === StripVlanHeader
+    actions[11] === VendorAction
+    actions[11].vendor_id.should == 0x00004cff
+    Array body = actions[11].body
+    body[0].should == "test"
+    body[1] .should == "test2"
+  end
+
+  it "<< with array" do
+    expect {@path << @arrayhops}.to raise_error(TypeError)
+  end
+
+  it "<< with mal argument" do
+    match = Match.new()
+    expect {@path << match}.to raise_error(TypeError)
+  end
+
   after do
   	@path = nil
     @path2 = nil
+    @hop = nil
+    @hop2 = nil
   end
 end
 

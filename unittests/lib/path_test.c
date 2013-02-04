@@ -63,6 +63,7 @@ start_flow_manager()
 static void
 stop_flow_manager()
 {
+
   char buf[50];
   FILE *fp;
   char *pid;
@@ -1703,7 +1704,6 @@ int main( int argc, char *argv[] ) {
     unit_test( test_create_flow_entry_group_teardown_request ),
     unit_test( test_create_flow_entry_group_teardown_reply ),
     unit_test( test_create_flow_entry_group_teardown ),
-
 
     unit_test_setup_teardown( test_flow_manager_flow_entry_group_setup_request, start_flow_manager, stop_flow_manager),
     unit_test_setup_teardown( test_flow_manager_flow_entry_group_teardown_request, start_flow_manager, stop_flow_manager),

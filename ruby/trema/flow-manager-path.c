@@ -274,7 +274,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
                       rb_raise( rb_eRangeError, "Please input positive integer" );
                     }
 
-                    p->priority = (uint16_t)NUM2UINT( priority );
+                    p->priority = (uint16_t)NUM2INT( priority );
                 }
 
                 VALUE idle_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "idle_timeout" ) ) );
@@ -285,7 +285,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
                       rb_raise( rb_eRangeError, "Please input positive integer" );
                     }
 
-                    p->idle_timeout = (uint16_t)NUM2UINT( idle_timeout );
+                    p->idle_timeout = (uint16_t)NUM2INT( idle_timeout );
                 }
 
                 VALUE hard_timeout = rb_hash_aref(options, ID2SYM( rb_intern( "hard_timeout" ) ) );
@@ -296,7 +296,7 @@ static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
                       rb_raise( rb_eRangeError, "Please input positive integer" );
                     }
 
-                    p->hard_timeout = (uint16_t)NUM2UINT( hard_timeout );
+                    p->hard_timeout = (uint16_t)NUM2INT( hard_timeout );
                 }
             }
             break;

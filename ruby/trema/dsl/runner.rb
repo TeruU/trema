@@ -21,11 +21,12 @@
 
 
 require "trema/tremashark"
-
+require "trema/flow-manager-class"
 
 module Trema
   module DSL
     class Runner
+
       def initialize context
         @context = context
       end
@@ -84,7 +85,7 @@ module Trema
       ################################################################################
 
 
-      def maybe_run_trema_services
+      def maybe_run_trema_services    
         maybe_run_tremashark
         maybe_run_switch_manager
         maybe_run_packetin_filter
@@ -92,8 +93,12 @@ module Trema
         maybe_run_hosts
         maybe_run_switches
         maybe_run_netnss
+        maybe_run_flow_manager
       end
 
+      def maybe_run_flow_manager
+        Trema::FlowManagerClass.instance
+      end
 
       def maybe_run_tremashark
         Trema::Tremashark.new.run if $use_tremashark
