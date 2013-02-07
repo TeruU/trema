@@ -18,12 +18,9 @@ require 'trema/flow-manager'
 
 class FlowManagerController < Controller
   include Trema::FlowManager
-  oneshot_timer_event(:test, 5)
+  oneshot_timer_event(:test, 3)
   
   def flow_manager_setup_reply(status, path)
-    info "*** flow_manager_setup_reply" 
-    info "status:" + status  
-
     match = Match.new(:in_port => 1)
     bool = Flow_manager.teardown_by_match(match)
     
@@ -31,9 +28,7 @@ class FlowManagerController < Controller
   end
   
   def flow_manager_teardown_reply(reason, path)
-    info "*** start flow_manager_teardown_reply" 
-    info "reason:" + reason
-    self.shutdown!
+    oneshot_timer_event(:shutdown, 1)
   end 
   
   def switch_ready datapath_id
@@ -57,6 +52,10 @@ class FlowManagerController < Controller
     Flow_manager.setup(path,self)
 
     info "*******************exit switch ready FlowManagerController*****************"
+  end
+
+  def shutdown
+    self.shutdown!
   end
 end
 

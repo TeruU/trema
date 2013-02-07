@@ -18,11 +18,9 @@ require 'trema/flow-manager'
 
 class FlowManagerController < Controller
   include Trema::FlowManager
-  oneshot_timer_event(:test, 5)
+  oneshot_timer_event(:test, 3)
   
   def flow_manager_setup_reply(status, path)
-  	info "*** flow_manager_setup_reply" 
-  	info "status:" + status	
     info "path.priority:" + path.priority().inspect
     info "path.idle:" + path.idle_timeout().inspect
     info "path.hard_timeout:" + path.hard_timeout().inspect
@@ -42,9 +40,7 @@ class FlowManagerController < Controller
   end
   
   def flow_manager_teardown_reply(reason, path)
-  	info "*** start flow_manager_teardown_reply" 
-  	info "reason:" + reason
-    self.shutdown!
+    oneshot_timer_event(:shutdown, 1)
   end 
   
   def switch_ready datapath_id
@@ -57,14 +53,17 @@ class FlowManagerController < Controller
   	hop = Hop.new(0x1, 1, 2, actions)
     hop2 = Hop.new(0x2, 2, 1)
   	match = Match.new(:in_port => 1)
-    path = Path.new(match, options={:idle_timeout=>5})
+    path = Path.new(match, options={:idle_timeout=>15})
     
     Flow_manager.append_hop_to_path(path, hop)
     Flow_manager.append_hop_to_path(path, hop2)
-    
     Flow_manager.setup(path,self)
 
     info "***exit switch ready FlowManagerController"
+  end
+
+  def shutdown
+    self.shutdown!
   end
 end
 

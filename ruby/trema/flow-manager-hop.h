@@ -27,10 +27,3 @@ extern VALUE cHop;
 void Init_hop( void );
 
 #endif // FLOW_MANAGER_H
-
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

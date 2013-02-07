@@ -29,9 +29,3 @@ void Init_flow_manager_module( void );
 
 #endif // FLOW_MANAGER_MODULE_H
 
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */

@@ -29,8 +29,6 @@ class FlowManagerController < Controller
     info "arrHops[0].datapath_id:" + arrHops[0].datapath_id().inspect
     info "arrHops[0].in_port:" + arrHops[0].in_port().inspect
     info "arrHops[0].out_port:" + arrHops[0].out_port().inspect
-    #arrAction1 = arrHops[0].actions()
-    #info "arrAction1[0].port_number():" + arrAction1[0].port_number().inspect
     info "arrHops[1].datapath_id:" + arrHops[1].datapath_id().inspect
     info "arrHops[1].in_port:" + arrHops[1].in_port().inspect
     info "arrHops[1].out_port:" + arrHops[1].out_port().inspect
@@ -40,16 +38,6 @@ class FlowManagerController < Controller
   def flow_manager_teardown_reply(reason, path)
     oneshot_timer_event(:shutdown, 1)
   end
-
-  def features_reply datapath_id, message
-    info "***features_replay***"
-    p message.ports
-  end
-
-  def stats_reply datapath_id, message
-    info "***stats_replay***"
-    puts message.stats
-  end 
   
   def switch_ready datapath_id
  	  info "***Hello %#x from #{ ARGV[ 0 ] }!" % datapath_id
@@ -57,17 +45,30 @@ class FlowManagerController < Controller
   
   def test
     Array actions = [SendOutPort.new(1)]
-  	hop = Hop.new(0x1,2,1)
-    hop2 = Hop.new(0x2,2,1)
+  	hop11 = Hop.new(0x1,2,1)
+    hop12 = Hop.new(0x2,2,1)
   	match = Match.new()
-    path = Path.new(match, options={:idle_timeout=>15, :hard_timeout=>30})
+    path1 = Path.new(match, options={:idle_timeout=>10, :hard_timeout=>30})
+    path1 << hop11
+    path1.append_hop(hop12)
 
-    path << hop
-    path.append_hop(hop2)
+    hop21 = Hop.new(0x1,1,2)
+    hop22 = Hop.new(0x2,1,2)
+  	match2 = Match.new(:nw_src => "192.168.0.1/32")
+    path2 = Path.new(match2, options={:idle_timeout=>10, :hard_timeout=>30}) 
+    path2 << hop21
+    path2.append_hop(hop22)
 
-    path.setup(self)
+  	hop31 = Hop.new(0x1,2,1)
+    hop32 = Hop.new(0x2,2,1)
+  	match3 = Match.new(:nw_src => "192.168.0.2/32")
+    path3 = Path.new(match3, options={:priority => 60000, :idle_timeout=>10, :hard_timeout=>30})
+    path3 << hop31
+    path3.append_hop(hop32)
 
-    info "***exit switch ready FlowManagerController"
+    path1.setup(self)
+    path2.setup(self)
+    path3.setup(self)
   end
 
   def shutdown

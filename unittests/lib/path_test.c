@@ -57,7 +57,7 @@ static void
 start_flow_manager()
 {
   system("./build.rb");
-  system("./trema run -c src/flow_manager/flow_manager_test/cflow_manager.conf -d");
+  system("./trema run -c src/examples/flow_manager_example/flow_manager_example.conf -d");
 }
 
 static void

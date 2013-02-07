@@ -102,12 +102,12 @@ delete_path_db( void ) {
   hash_entry *e;
 
   init_hash_iterator( path_db.id, &iter );
+
   while ( ( e = iterate_hash_next( &iter ) ) != NULL ) {
     void *value = delete_hash_entry( path_db.id, e->key );
     delete_hash_entry( path_db.match, value );
     xfree( value );
   }
-
   delete_hash( path_db.id );
   path_db.id = NULL;
   delete_hash( path_db.match );
@@ -139,7 +139,16 @@ add_path_entry( path_private *path ) {
 
 static bool
 delete_path_entry( uint64_t id ) {
+
+  /*
+  if(path_db.id == NULL)
+  {
+	  return false;
+  }
+  */
+
   path_private *deleted = delete_hash_entry( path_db.id, &id );
+
   if ( deleted == NULL ) {
     return false;
   }
@@ -268,15 +277,16 @@ append_hop_to_path( path *path, hop *hop ) {
 
 
 void delete_path( path *path ) {
-  path_private *private = ( path_private * ) path;
 
+  path_private *private = ( path_private * ) path;
   list_element *element = path->hops;
+
   while ( element != NULL ) {
     delete_hop( element->data );
     element = element->next;
   }
-  delete_list( path->hops );
 
+  delete_list( path->hops );
   xfree( private );
 }
 

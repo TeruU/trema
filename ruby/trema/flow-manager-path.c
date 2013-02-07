@@ -51,8 +51,14 @@ typedef struct {
   void *r_extra_actions_pointer;
 } hop_private;
 
+extern VALUE mTrema;
 VALUE cPath;
 
+/*
+ * The value of actions
+ *
+ * @return [Array]
+ */
 static VALUE path_priority(VALUE self)
 {
     path *p;
@@ -60,6 +66,11 @@ static VALUE path_priority(VALUE self)
     return UINT2NUM(p->priority);
 }
 
+/*
+ * The value of idle timeout
+ *
+ * @return [Number]
+ */
 static VALUE path_idle_timeout(VALUE self)
 {
     path *p;
@@ -67,6 +78,11 @@ static VALUE path_idle_timeout(VALUE self)
     return UINT2NUM(p->idle_timeout);
 }
 
+/*
+ * The value of hard timeout
+ *
+ * @return [Number]
+ */
 static VALUE path_hard_timeout(VALUE self)
 {
     path *p;
@@ -74,6 +90,11 @@ static VALUE path_hard_timeout(VALUE self)
     return UINT2NUM(p->hard_timeout);
 }
 
+/*
+ * The value of hops
+ *
+ * @return [Array]
+ */
 static VALUE path_hops(VALUE self)
 {
     debug("start\n");
@@ -98,6 +119,11 @@ static VALUE path_hops(VALUE self)
     return hops;
 }
 
+/*
+ * The value of match
+ *
+ * @return [Match]
+ */
 static VALUE path_match(VALUE self)
 {
     debug("start\n");
@@ -128,6 +154,15 @@ static VALUE path_match(VALUE self)
     return obj;
 }
 
+/*
+ * Start setting up the path.
+ *
+ * @overload setup(controller)
+ *
+ * @param [Controller]
+ *
+ * @return [Bool]
+ */
 static VALUE path_setup(VALUE self, VALUE controller)
 {
     debug("start\n");
@@ -148,6 +183,11 @@ static VALUE path_setup(VALUE self, VALUE controller)
     }
 }
 
+/*
+ * Teardown the path
+ *
+ * @return [Bool]
+ */
 static VALUE path_terdown(VALUE self)
 {
     debug("start\n");
@@ -180,6 +220,13 @@ static VALUE path_terdown(VALUE self)
     }
 }
 
+/*
+ * Append a hop to a path
+ *
+ * @param [Hop] hop.
+ *
+ * @return [Nil] nil.
+ */
 static VALUE path_append_hop(VALUE self, VALUE rhop)
 {
 	debug("start\n");
@@ -201,6 +248,15 @@ static VALUE path_append_hop(VALUE self, VALUE rhop)
 	return Qnil;
 }
 
+/*
+ * Append hops to a path.
+ *
+ * @overload append_hops(hops)
+ *
+ * @param [Array] hops
+ *
+ * @return [Nil] nil.
+ */
 static VALUE path_append_hops(VALUE self, VALUE rhops)
 {
     debug("start\n");
@@ -235,6 +291,31 @@ static VALUE path_append_hops(VALUE self, VALUE rhops)
     return Qnil;
 }
 
+/*
+ * Creates a {Path} instance.
+ *
+ * @overload initialize(match, options={})
+ *
+ *   @example
+ *     Path.new(
+ *       Match match,
+ *       :priority => priority,
+ *       :idle_timeout => idle_timeout,
+ *       :hard_timeout => hard_timeout,
+ *     )
+ *
+ *   @param [Hash] options the options hash.
+ *
+ *   @param [Match] match match.
+ *
+ *   @option options [Number] :priority the priority for the path.
+ *
+ *   @option options [Number] :idle_timeout the idle_timeout for the path.
+ *
+ *   @option options [Number] :hard_timeout the hard_timeout for the path.
+ *
+ *   @return [Path] self an object that encapsulates and wraps the +path+
+ */
 static VALUE path_initialize(int argc, VALUE *argv, VALUE self)
 {
     debug("start\n");
@@ -349,9 +430,11 @@ static VALUE create_Path(VALUE klass)
 
 void Init_path()
 {
-	cPath = rb_define_class("Path", rb_cObject);
+	//cPath = rb_define_class("Path", rb_cObject);
+	//rb_define_private_method(cPath, "initialize", path_initialize, -1);
+	cPath = rb_define_class_under(mTrema, "Path", rb_cObject);
 	rb_define_alloc_func(cPath, create_Path);
-	rb_define_private_method(cPath, "initialize", path_initialize, -1);
+	rb_define_method(cPath, "initialize", path_initialize, -1);
 	rb_define_method(cPath, "priority", path_priority, 0);
 	rb_define_method(cPath, "idle_timeout", path_idle_timeout, 0);
 	rb_define_method(cPath, "hard_timeout", path_hard_timeout, 0);

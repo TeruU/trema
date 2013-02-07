@@ -27,11 +27,6 @@ Before( "@slow_process" ) do
   @aruba_io_wait_seconds = 1
 end
 
-Before( "@long_timeout") do
-  @aruba_timeout_seconds = 30
-  sleep 5
-end
-
 After do
   run "trema killall"
   sleep 1

@@ -23,9 +23,7 @@
 #include "path_utils.h"
 #include "action-common.h"
 
-/*
- * Please uncomment below when you need debug output
- */
+//Please uncomment below when you need debug output
 //#define DEBUG
 #ifdef DEBUG
 #define debug(...) {printf("%s(%d):", __func__, __LINE__); printf(__VA_ARGS__);}
@@ -39,6 +37,7 @@ typedef struct {
   void *r_extra_actions_pointer;
 } hop_private;
 
+extern VALUE mTrema;
 VALUE cHop;
 
 static void form_actions( VALUE raction, openflow_actions *actions );
@@ -142,6 +141,11 @@ static void flow_manager_append_action( openflow_actions *actions, VALUE action 
   }
 }
 
+/*
+ * The value of datapath id
+ *
+ * @return [Number]
+ */
 static VALUE hop_datapath_id(VALUE self)
 {
 	hop *h;
@@ -149,6 +153,11 @@ static VALUE hop_datapath_id(VALUE self)
 	return UINT2NUM((long unsigned int)h->datapath_id);
 }
 
+/*
+ * The value of in port
+ *
+ * @return [Number]
+ */
 static VALUE hop_in_port(VALUE self)
 {
 	hop *h;
@@ -156,6 +165,11 @@ static VALUE hop_in_port(VALUE self)
 	return UINT2NUM(h->in_port);
 }
 
+/*
+ * The value of out port
+ *
+ * @return [Number]
+ */
 static VALUE hop_out_port(VALUE self)
 {
 	hop *h;
@@ -163,6 +177,11 @@ static VALUE hop_out_port(VALUE self)
 	return UINT2NUM(h->out_port);
 }
 
+/*
+ * The value of actions
+ *
+ * @return [Array]
+ */
 static VALUE hop_actions(VALUE self)
 {
 	hop_private *hp;
@@ -170,6 +189,29 @@ static VALUE hop_actions(VALUE self)
 	return (VALUE)hp->r_extra_actions_pointer;
 }
 
+/*
+ * Creates a {Hop} instance.
+ *
+ * @overload initialize(datapath_id, in_port, out_port, actions)
+ *
+ *   @example
+ *     Hop.new(
+ *       Number datapath_id,
+ *       Number in_port,
+ *       Number out_port,
+ *       Array actions,
+ *     )
+ *
+ *	@param [Number] datapath_id datapath id.
+ *
+ *	@param [Number] in_port in port.
+ *
+ *	@param [Number] out_port out port.
+ *
+ *	@param [Array] actions.
+ *
+ *	@return [Hop] self an object that encapsulates and wraps the +hop+
+ */
 static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
 {
         hop_private *hp;
@@ -222,7 +264,7 @@ static VALUE hop_initialize(int argc, VALUE *argv, VALUE self)
                 default:
                 {
                     //This pass never be passed because of pre-argument-check.
-                    rb_raise( rb_eTypeError, "The number of argument is invalid." );
+                    rb_raise( rb_eArgError, "The number of argument is invalid." );
                     break;
                 }
         }
@@ -247,25 +289,27 @@ static void delete_Hop(hop* hop)
 
 static VALUE create_Hop(VALUE klass)
 {
-        hop_private *ph = ALLOC( hop_private );
-        memset( ph, 0, sizeof( hop_private ) );
-        debug("hop_private %p is created\n", ph);
-        hop *h = &ph->public;
-        debug("dpid : %d", h->datapath_id);
-        debug("hop pointer is %p\n", h);
-        VALUE rHop = Data_Wrap_Struct(klass, 0, -1, h );
-        debug("ruby hop %p is created\n", ph->r_hop_pointer);
-        ph->r_hop_pointer = (void *)rHop;
-        return rHop;
+	hop_private *ph = ALLOC( hop_private );
+	memset( ph, 0, sizeof( hop_private ) );
+	debug("hop_private %p is created\n", ph);
+	hop *h = &ph->public;
+	debug("dpid : %d", h->datapath_id);
+	debug("hop pointer is %p\n", h);
+	VALUE rHop = Data_Wrap_Struct(klass, 0, -1, h );
+	debug("ruby hop %p is created\n", ph->r_hop_pointer);
+	ph->r_hop_pointer = (void *)rHop;
+	return rHop;
 }
 
 void Init_hop()
 {
-        cHop = rb_define_class("Hop", rb_cObject);
-        rb_define_alloc_func(cHop, create_Hop);
-        rb_define_private_method(cHop, "initialize", hop_initialize, -1);
-        rb_define_method(cHop, "datapath_id", hop_datapath_id, 0);
-        rb_define_method(cHop, "in_port", hop_in_port, 0);
-        rb_define_method(cHop, "out_port", hop_out_port, 0);
-        rb_define_method(cHop, "actions", hop_actions, 0);
+	//cHop = rb_define_class("Hop", rb_cObject);
+	//rb_define_private_method(cHop, "initialize", hop_initialize, -1);
+	cHop = rb_define_class_under(mTrema, "Hop", rb_cObject);
+	rb_define_alloc_func(cHop, create_Hop);
+	rb_define_method(cHop, "initialize", hop_initialize, -1);
+	rb_define_method(cHop, "datapath_id", hop_datapath_id, 0);
+	rb_define_method(cHop, "in_port", hop_in_port, 0);
+	rb_define_method(cHop, "out_port", hop_out_port, 0);
+	rb_define_method(cHop, "actions", hop_actions, 0);
 }

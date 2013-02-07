@@ -53,6 +53,7 @@ typedef struct {
 } hop_private;
 
 int isInit = FALSE;
+extern VALUE mTrema;
 VALUE mFlowManager;
 
 static VALUE init_flow_manager(VALUE self);
@@ -92,6 +93,15 @@ handle_teardown( int reason, const path *p, void *controller ) {
   }
 }
 
+/*
+ * Teardown the path that has the match.
+ *
+ * @overload teardown_by_match(match)
+ *
+ * @param [Match] match match
+ *
+ * @return [Bool] bool
+ */
 static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
 {
     debug("start\n");
@@ -115,6 +125,19 @@ static VALUE flow_manager_teardown_by_match(VALUE self, VALUE r_match)
     }
 }
 
+/*
+ * Teardown the path specified.
+ *
+ * @overload teardown(datapath_id, match, priority)
+ *
+ * @param [Number] in_datapath_id datapath id.
+ *
+ * @param [Match] match match.
+ *
+ * @param [Number] priority priotity.
+ *
+ * @return [Bool] bool
+ */
 static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE match, VALUE priority)
 {
     debug("start\n");
@@ -141,6 +164,19 @@ static VALUE flow_manager_teardown(VALUE self, VALUE in_datapath_id ,VALUE match
     }
 }
 
+/*
+ * Look up the path specified.
+ *
+ * @overload lookup(datapath_id, match, priority)
+ *
+ * @param [Number] in_datapath_id datapath id.
+ *
+ * @param [Match] match match.
+ *
+ * @param [Number] priority priotity.
+ *
+ * @return [Path] path
+ */
 static VALUE flow_manager_lookup(VALUE self, VALUE datapath_id, VALUE match, VALUE priority)
 {
     debug("start\n");
@@ -172,6 +208,17 @@ static VALUE flow_manager_lookup(VALUE self, VALUE datapath_id, VALUE match, VAL
     return obj;
 }
 
+/*
+ * Start setting up the path.
+ *
+ * @overload setup(path, controller)
+ *
+ * @param [Path] path path.
+ *
+ * @param [Controller] controller controller.
+ *
+ * @return [Bool] bool.
+ */
 static VALUE flow_manager_setup(VALUE self, VALUE r_path, VALUE controller)
 {
     debug("start\n");
@@ -201,6 +248,17 @@ static VALUE flow_manager_setup(VALUE self, VALUE r_path, VALUE controller)
     }
 }
 
+/*
+ * Append a hop to a path.
+ *
+ * @overload appned_hop_to_path(path, hop)
+ *
+ * @param [Path] path path.
+ *
+ * @param [Hop] hop hop.
+ *
+ * @return [Nil] Nil.
+ */
 static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE rpath, VALUE rhop)
 {
     debug("start\n");
@@ -227,6 +285,17 @@ static VALUE flow_manager_append_hop_to_path(VALUE self, VALUE rpath, VALUE rhop
     return Qnil;
 }
 
+/*
+ * Append hops to a path.
+ *
+ * @overload appned_hops_to_path(path, hops)
+ *
+ * @param [Path] path path.
+ *
+ * @param [Array] hops hops.
+ *
+ * @return [Nil] Nil.
+ */
 static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rhops)
 {
     debug("start\n");
@@ -267,6 +336,11 @@ static VALUE flow_manager_append_hops_to_path(VALUE self, VALUE rpath, VALUE rho
     return Qnil;
 }
 
+/*
+ * Initialize flow manager
+ *
+ * @return [Bool] bool.
+ */
 static VALUE init_flow_manager(VALUE self)
 {
 	debug("start\n");
@@ -274,28 +348,42 @@ static VALUE init_flow_manager(VALUE self)
 	UNUSED( self );
 	if(isInit == FALSE)
 	{
-		init_path();
-		isInit = TRUE;
-		debug("end with true\n");
-	    return Qtrue;
+		debug("start init_path\n");
+		bool ret = init_path();
+		if(ret == true)
+		{
+			isInit = TRUE;
+			debug("end with true\n");
+			return Qtrue;
+		}
 	}
 	debug("end with false\n");
     return Qfalse;
 }
 
+/*
+ * Finalize flow manager
+ *
+ * @return [Bool] bool.
+ */
 static VALUE finalize_flow_manager(VALUE self)
 {
   debug("start\n");
   UNUSED( self );
-  finalize_path();
-  debug("end\n");
-
-  return Qnil;
+  bool ret = finalize_path();
+  if(ret == true)
+  {
+	  debug("end with true\n");
+	  return Qtrue;
+  }
+  debug("end with false\n");
+  return Qfalse;
 }
 
 void Init_flow_manager_module()
 {
-    mFlowManager = rb_define_module("Flow_manager");
+    //mFlowManager = rb_define_module("Flow_manager");
+    mFlowManager = rb_define_module_under(mTrema, "Flow_manager");
     rb_define_module_function(mFlowManager, "initialize", init_flow_manager, 0);
     rb_define_module_function(mFlowManager, "finalize", finalize_flow_manager, 0);
     rb_define_module_function(mFlowManager, "lookup", flow_manager_lookup, 3);

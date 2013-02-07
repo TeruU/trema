@@ -61,7 +61,8 @@ module Trema
     #
     def start
       #run_flow_manager
-      #Flow_manager.initialize() 
+      info "pass start"
+      Flow_manager.initialize() 
     end
     
     #
@@ -69,8 +70,10 @@ module Trema
     #  Shutdown controller.
     #
     def shutdown!     
-      Flow_manager.finalize()
       super
+      puts "pass shutdown"
+      sleep 1
+      Flow_manager.finalize()
     end
   end
 end

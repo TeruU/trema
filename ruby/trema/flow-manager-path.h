@@ -28,9 +28,3 @@ void Init_path( void );
 
 #endif // FLOW_MANAGER_PATH_H
 
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
