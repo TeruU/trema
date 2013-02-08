@@ -115,7 +115,10 @@ module Trema
       def run name = nil, &block
         stanza = Trema::DSL::Run.new( name )
         stanza.instance_eval( &block )
+        p stanza
+        puts "pass2"
         Trema::App.new( stanza )
+        puts "pass3"
       end
       deprecate :app => :run
     end

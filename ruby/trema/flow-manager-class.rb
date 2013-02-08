@@ -35,12 +35,10 @@ module Trema
       pid_file = Trema.pid+"/flow_manager.pid"
       unless File.exist?(pid_file)
         sh "#{ Trema::Executables.flow_manager } --daemonize"
-        ObjectSpace.define_finalizer(self, FlowManagerClass.down)
+        #ObjectSpace.define_finalizer(self, FlowManagerClass.down)
       else
-        raise "flow_manager is already runnning"
+        puts "flow_manager is already runnning"
       end
     end
-
-
   end
 end

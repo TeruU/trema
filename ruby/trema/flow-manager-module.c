@@ -370,6 +370,7 @@ static VALUE finalize_flow_manager(VALUE self)
 {
   debug("start\n");
   UNUSED( self );
+  debug("start finalize_path\n");
   bool ret = finalize_path();
   if(ret == true)
   {

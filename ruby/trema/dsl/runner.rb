@@ -85,7 +85,8 @@ module Trema
       ################################################################################
 
 
-      def maybe_run_trema_services    
+      def maybe_run_trema_services
+        maybe_run_flow_manager 
         maybe_run_tremashark
         maybe_run_switch_manager
         maybe_run_packetin_filter
@@ -93,11 +94,13 @@ module Trema
         maybe_run_hosts
         maybe_run_switches
         maybe_run_netnss
-        maybe_run_flow_manager
       end
 
-      def maybe_run_flow_manager
+      def maybe_run_flow_manager 
         Trema::FlowManagerClass.instance
+        #stanza = Trema::DSL::Run.new( nil )
+        #stanza.path "./objects/flow_manager/flow_manager"
+        #Trema::App.new( stanza )
       end
 
       def maybe_run_tremashark
@@ -152,9 +155,8 @@ module Trema
 
       def maybe_run_apps
         return if @context.apps.values.empty?
-
         @context.apps.values[ 0..-2 ].each do | each |
-          each.daemonize!
+          each.daemonize!     
         end
         trap( "SIGINT" ) do
           print( "\nterminated\n" )
@@ -168,7 +170,7 @@ module Trema
 
 
       def maybe_daemonize_apps
-        @context.apps.each do | name, app |
+        @context.apps.each do | name, app |     
           app.daemonize!
         end
       end

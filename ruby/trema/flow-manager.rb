@@ -45,22 +45,12 @@ module Trema
     #
 	  handler :flow_manager_teardown_reply
 
-    def run_flow_manager
-      pid_file = Trema.pid+"/flow_manager.pid"
-      unless File.exist?(pid_file)
-        sh "#{ Trema::Executables.flow_manager } --daemonize"
-      else
-        raise "flow_manager is already runnning"
-      end
-    end
-	
     #
     # @!method start
     # Initialization before start_trema() call.
     # This method will be implicitly called inside Controller#run! between init_trema() and start_trema() calls.
     #
     def start
-      #run_flow_manager
       info "pass start"
       Flow_manager.initialize() 
     end
